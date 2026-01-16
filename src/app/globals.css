@@ -1,26 +1,387 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================
+   aurë — Complete Theme Configuration
+   Tailwind v4 CSS-based config
+   ============================================ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* ----------------------------------------
+     Font Families
+     ---------------------------------------- */
+  --font-cormorant: var(--font-cormorant), "Cormorant Garamond", serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+
+  /* ----------------------------------------
+     Stone Color Palette (Primary)
+     ---------------------------------------- */
+  --color-stone-50: #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: #e7e5e4;
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-600: #57534e;
+  --color-stone-700: #44403c;
+  --color-stone-800: #292524;
+  --color-stone-900: #1c1917;
+
+  /* ----------------------------------------
+     Aura Gradient Colors — Fresh
+     ---------------------------------------- */
+  --color-lime-50: #f7fee7;
+  --color-lime-100: #ecfccb;
+  --color-lime-200: #d9f99d;
+  --color-lime-300: #bef264;
+  --color-lime-400: #a3e635;
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-cyan-50: #ecfeff;
+  --color-cyan-100: #cffafe;
+
+  /* ----------------------------------------
+     Aura Gradient Colors — Floral
+     ---------------------------------------- */
+  --color-pink-50: #fdf2f8;
+  --color-pink-100: #fce7f3;
+  --color-pink-200: #fbcfe8;
+  --color-pink-300: #f9a8d4;
+  --color-pink-400: #f472b6;
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #ffe4e6;
+  --color-rose-200: #fecdd3;
+  --color-rose-300: #fda4af;
+  --color-rose-400: #fb7185;
+  --color-fuchsia-50: #fdf4ff;
+  --color-fuchsia-100: #fae8ff;
+
+  /* ----------------------------------------
+     Aura Gradient Colors — Amber/Gourmand
+     ---------------------------------------- */
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-200: #fed7aa;
+  --color-orange-500: #f97316;
+  --color-yellow-50: #fefce8;
+  --color-yellow-100: #fef9c3;
+  --color-yellow-200: #fef08a;
+  --color-yellow-300: #fde047;
+
+  /* ----------------------------------------
+     Aura Gradient Colors — Mysterious
+     ---------------------------------------- */
+  --color-violet-400: #a78bfa;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #7c3aed;
+  --color-purple-500: #a855f7;
+  --color-purple-600: #9333ea;
+
+  /* ----------------------------------------
+     Aura Gradient Colors — Musky/Neutral
+     ---------------------------------------- */
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+
+  /* ----------------------------------------
+     Extended Border Radius
+     ---------------------------------------- */
+  --radius-4xl: 2rem;
+  --radius-5xl: 2.5rem;
+
+  /* ----------------------------------------
+     Custom Shadows
+     ---------------------------------------- */
+  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 40px -10px rgba(0, 0, 0, 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============================================
+   Base Styles
+   ============================================ */
+
+:root {
+  --background: #fafaf9;
+  --foreground: #1c1917;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html[data-scroll-behavior="smooth"] {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* ============================================
+   Typography
+   ============================================ */
+
+/* Cormorant Garamond for headings and accent text */
+.font-cormorant {
+  font-family: var(--font-cormorant);
+}
+
+/* Ensure proper kerning for the wordmark */
+.tracking-wide {
+  letter-spacing: 0.025em;
+}
+
+/* ============================================
+   Selection & Focus States
+   ============================================ */
+
+::selection {
+  background-color: #e7e5e4;
+  color: #1c1917;
+}
+
+:focus-visible {
+  outline: 2px solid #78716c;
+  outline-offset: 2px;
+}
+
+/* Remove default focus ring for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ============================================
+   Transitions & Animations
+   ============================================ */
+
+/* Smooth transitions for interactive elements */
+button,
+a,
+input,
+select,
+textarea {
+  transition: all 0.2s ease-out;
+}
+
+/* Gentle hover lift effect */
+.hover-lift {
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ============================================
+   Glass Morphism Utilities
+   ============================================ */
+
+.glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ============================================
+   Gradient Backgrounds
+   ============================================ */
+
+/* Base aurë gradient */
+.aura-gradient-default {
+  background: linear-gradient(
+    135deg,
+    #f5f5f4 0%,
+    #fafaf9 50%,
+    #ffffff 100%
+  );
+}
+
+/* Fresh scent family gradient */
+.aura-gradient-fresh {
+  background: linear-gradient(
+    135deg,
+    #ecfccb 0%,
+    #ecfdf5 50%,
+    #cffafe 100%
+  );
+}
+
+/* Floral scent family gradient */
+.aura-gradient-floral {
+  background: linear-gradient(
+    135deg,
+    #fce7f3 0%,
+    #fff1f2 50%,
+    #fae8ff 100%
+  );
+}
+
+/* Woody scent family gradient */
+.aura-gradient-woody {
+  background: linear-gradient(
+    135deg,
+    #fef3c7 0%,
+    #f5f5f4 50%,
+    #fefce8 100%
+  );
+}
+
+/* Amber scent family gradient */
+.aura-gradient-amber {
+  background: linear-gradient(
+    135deg,
+    #ffedd5 0%,
+    #fffbeb 50%,
+    #fef9c3 100%
+  );
+}
+
+/* Gourmand scent family gradient */
+.aura-gradient-gourmand {
+  background: linear-gradient(
+    135deg,
+    #fef3c7 0%,
+    #fff7ed 50%,
+    #ffe4e6 100%
+  );
+}
+
+/* Musky scent family gradient */
+.aura-gradient-musky {
+  background: linear-gradient(
+    135deg,
+    #f5f5f4 0%,
+    #fafafa 50%,
+    #f1f5f9 100%
+  );
+}
+
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+
+/* Webkit scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
+
+/* Firefox scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d6d3d1 transparent;
+}
+
+/* ============================================
+   Safe Area Insets (Mobile)
+   ============================================ */
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* ============================================
+   Animation Keyframes
+   ============================================ */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+/* Text balance for headings */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Gradient text */
+.gradient-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
