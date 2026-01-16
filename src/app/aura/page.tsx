@@ -1,151 +1,383 @@
 // src/app/aura/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
-import { Check, RefreshCw } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { useUser } from "@clerk/nextjs";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
+import { Check, Sparkles, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { AuraGradient } from "@/components/AuraGradient";
 import { Wordmark } from "@/components/Wordmark";
+import { cn } from "@/lib/utils";
 
-interface SessionData {
-  styles: string[];
-  mood: string;
-  scents: string[];
-  occasion: string;
-  weather: {
-    temperatureCategory?: string;
-    temperature?: number;
-    condition?: string;
-    location?: string;
-    isManual?: boolean;
-  } | null;
+// ============================================
+// SCENT FAMILY GRADIENTS & STYLES
+// ============================================
+const SCENT_GRADIENTS: Record<string, {
+  bg: string;
+  accent: string;
+  glow: string;
+  orbPrimary: string;
+  orbSecondary: string;
+}> = {
+  fresh: {
+    bg: "from-emerald-50 via-teal-50 to-cyan-50",
+    accent: "text-teal-700",
+    glow: "bg-teal-400/20",
+    orbPrimary: "bg-teal-300/30",
+    orbSecondary: "bg-cyan-200/40",
+  },
+  floral: {
+    bg: "from-rose-50 via-pink-50 to-fuchsia-50",
+    accent: "text-rose-700",
+    glow: "bg-rose-400/20",
+    orbPrimary: "bg-rose-300/30",
+    orbSecondary: "bg-pink-200/40",
+  },
+  woody: {
+    bg: "from-amber-50 via-orange-50 to-yellow-50",
+    accent: "text-amber-800",
+    glow: "bg-amber-400/20",
+    orbPrimary: "bg-amber-300/30",
+    orbSecondary: "bg-orange-200/40",
+  },
+  amber: {
+    bg: "from-orange-50 via-amber-50 to-red-50",
+    accent: "text-orange-800",
+    glow: "bg-orange-400/20",
+    orbPrimary: "bg-orange-300/30",
+    orbSecondary: "bg-amber-200/40",
+  },
+  gourmand: {
+    bg: "from-amber-50 via-yellow-50 to-orange-50",
+    accent: "text-amber-900",
+    glow: "bg-amber-500/20",
+    orbPrimary: "bg-amber-400/30",
+    orbSecondary: "bg-yellow-200/40",
+  },
+  musky: {
+    bg: "from-stone-100 via-zinc-50 to-warm-gray-50",
+    accent: "text-stone-700",
+    glow: "bg-stone-400/20",
+    orbPrimary: "bg-stone-300/30",
+    orbSecondary: "bg-zinc-200/40",
+  },
+  default: {
+    bg: "from-stone-50 via-amber-50/30 to-stone-100",
+    accent: "text-stone-700",
+    glow: "bg-stone-400/20",
+    orbPrimary: "bg-stone-300/30",
+    orbSecondary: "bg-amber-100/40",
+  },
+};
+
+// ============================================
+// ANIMATION VARIANTS
+// ============================================
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
+  },
+};
+
+const orbVariants = {
+  animate: {
+    scale: [1, 1.1, 1],
+    opacity: [0.3, 0.5, 0.3],
+    transition: {
+      duration: 8,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
+};
+
+// ============================================
+// FLOATING ORBS BACKGROUND
+// ============================================
+function FloatingOrbs({ scentFamily }: { scentFamily: string }) {
+  const gradient = SCENT_GRADIENTS[scentFamily] || SCENT_GRADIENTS.default;
+
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      {/* Large primary orb - top right */}
+      <motion.div
+        variants={orbVariants}
+        animate="animate"
+        className={cn(
+          "absolute -top-20 -right-20 w-80 h-80 rounded-full blur-3xl",
+          gradient.orbPrimary
+        )}
+      />
+      {/* Secondary orb - bottom left */}
+      <motion.div
+        variants={orbVariants}
+        animate="animate"
+        style={{ animationDelay: "2s" }}
+        className={cn(
+          "absolute -bottom-32 -left-32 w-96 h-96 rounded-full blur-3xl",
+          gradient.orbSecondary
+        )}
+      />
+      {/* Accent orb - center */}
+      <motion.div
+        variants={orbVariants}
+        animate="animate"
+        style={{ animationDelay: "4s" }}
+        className={cn(
+          "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-3xl",
+          gradient.glow
+        )}
+      />
+    </div>
+  );
 }
 
-export default function TodaysAura() {
+// ============================================
+// LOADING STATES
+// ============================================
+function LoadingState({ message }: { message: string }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex flex-col items-center justify-center px-6">
+      <FloatingOrbs scentFamily="default" />
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        className="relative z-10"
+      >
+        <RefreshCw className="w-8 h-8 text-stone-400" />
+      </motion.div>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="text-stone-500 mt-4 font-cormorant text-lg text-center relative z-10"
+      >
+        {message}
+      </motion.p>
+    </div>
+  );
+}
+
+function ErrorState({
+  title,
+  message,
+  actionLabel,
+  actionHref
+}: {
+  title: string;
+  message: string;
+  actionLabel: string;
+  actionHref: string;
+}) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex flex-col items-center justify-center px-6">
+      <FloatingOrbs scentFamily="default" />
+      <div className="relative z-10 text-center">
+        <h1 className="font-cormorant text-2xl text-stone-800 mb-2">{title}</h1>
+        <p className="text-stone-500 mb-6">{message}</p>
+        <Link
+          href={actionHref}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-stone-800 text-white rounded-full font-cormorant text-lg hover:bg-stone-700 transition-colors"
+        >
+          <Sparkles className="w-4 h-4" />
+          {actionLabel}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
+export default function RecommendationResult() {
   const router = useRouter();
-  const [sessionData, setSessionData] = useState<SessionData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const { user, isLoaded: isUserLoaded } = useUser();
+  const [isLoggingWorn, setIsLoggingWorn] = useState(false);
 
-  useEffect(() => {
-    // Retrieve session data from sessionStorage
-    const styles = sessionStorage.getItem("ritual_styles");
-    const mood = sessionStorage.getItem("ritual_mood");
-    const scents = sessionStorage.getItem("ritual_scents");
-    const occasion = sessionStorage.getItem("ritual_occasion");
-    const weather = sessionStorage.getItem("ritual_weather");
+  // Get session ID from URL
+  const sessionIdParam = searchParams.get("session");
+  const sessionId = sessionIdParam as Id<"sessions"> | null;
 
-    if (styles && mood && scents && occasion) {
-      setSessionData({
-        styles: JSON.parse(styles),
-        mood,
-        scents: JSON.parse(scents),
-        occasion,
-        weather: weather ? JSON.parse(weather) : null,
+  // Fetch session data from Convex
+  const session = useQuery(
+    api.sessions.get,
+    sessionId ? { sessionId } : "skip"
+  );
+
+  // Mutation for marking as worn
+  const markWorn = useMutation(api.userPerfumes.markWorn);
+
+  // Handle "Log as worn" action
+  const handleLogAsWorn = async () => {
+    if (!session?.userPerfume?._id || !user?.id) return;
+
+    setIsLoggingWorn(true);
+    try {
+      await markWorn({
+        userId: user.id,
+        userPerfumeId: session.userPerfume._id,
       });
+      router.push("/collection");
+    } catch (error) {
+      console.error("Failed to log as worn:", error);
+      setIsLoggingWorn(false);
     }
+  };
 
-    // Simulate loading for recommendation generation
-    setTimeout(() => setLoading(false), 1500);
-  }, []);
+  // Handle "Save this vibe" action
+  const handleSaveVibe = () => {
+    // TODO: Implement save modal in next iteration
+    alert("Save feature coming soon! Your vibe has been noted.");
+  };
 
-  // TODO: Replace with actual Convex query for recommendation
-  // This is placeholder data based on the session inputs
-  const session = sessionData ? {
-    perfume: {
-      name: "Santal 33",
-      house: "Le Labo",
-      scentFamily: sessionData.scents[0] || "woody",
-    },
-    auraWords: getAuraWords(sessionData.mood),
-    editorialExplanation: generateEditorialExplanation(sessionData),
-    affirmation: getAffirmation(sessionData.mood),
-    weather: sessionData.weather,
-  } : null;
+  // Handle "New ritual" action
+  const handleNewRitual = () => {
+    router.push("/ritual");
+  };
 
-  if (loading || !session) {
+  // ============================================
+  // LOADING & ERROR STATES
+  // ============================================
+
+  // No session ID in URL
+  if (!sessionId) {
     return (
-      <AuraGradient>
-        <div className="min-h-screen flex flex-col items-center justify-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          >
-            <RefreshCw className="w-8 h-8 text-stone-400" />
-          </motion.div>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-stone-500 mt-4 font-cormorant text-lg"
-          >
-            Finding your aura...
-          </motion.p>
-        </div>
-      </AuraGradient>
+      <ErrorState
+        title="No session found"
+        message="Start a new ritual to discover your perfect scent."
+        actionLabel="Begin Ritual"
+        actionHref="/ritual"
+      />
     );
   }
 
+  // Still loading user or session
+  if (!isUserLoaded || session === undefined) {
+    return <LoadingState message="Revealing your aura..." />;
+  }
+
+  // Session not found
+  if (session === null) {
+    return (
+      <ErrorState
+        title="Session not found"
+        message="This ritual has expired or doesn't exist."
+        actionLabel="Start Fresh"
+        actionHref="/ritual"
+      />
+    );
+  }
+
+  // No perfume recommendation
+  if (!session.perfume) {
+    return (
+      <ErrorState
+        title="No recommendation found"
+        message="We couldn't find the perfect match. Try again?"
+        actionLabel="Try Again"
+        actionHref="/ritual"
+      />
+    );
+  }
+
+  // ============================================
+  // RENDER RECOMMENDATION
+  // ============================================
+  const { perfume, editorialExplanation, affirmation, mood } = session;
+  const scentFamily = perfume.scentFamily || "default";
+  const gradient = SCENT_GRADIENTS[scentFamily] || SCENT_GRADIENTS.default;
+  const auraWords = perfume.auraWords?.slice(0, 3) || getDefaultAuraWords(mood);
+
   return (
-    <AuraGradient scentFamily={session.perfume.scentFamily}>
-      <div className="min-h-screen px-6 py-8 pb-40">
+    <div className={cn("min-h-screen bg-gradient-to-br", gradient.bg)}>
+      <FloatingOrbs scentFamily={scentFamily} />
+
+      <div className="relative z-10 px-6 py-8 pb-56">
         {/* Header */}
-        <header className="flex items-center justify-between mb-12">
+        <motion.header
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-between mb-12"
+        >
           <Link href="/collection">
             <Wordmark size="sm" />
           </Link>
-          <span className="text-stone-400 text-sm">Today&apos;s Aura</span>
-        </header>
+          <span className="text-stone-400 text-sm tracking-wide">
+            Today&apos;s Aura
+          </span>
+        </motion.header>
 
         {/* Main Content */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
           className="space-y-8"
         >
-          {/* Perfume Recommendation */}
-          <div className="text-center py-8">
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-stone-500 text-sm uppercase tracking-widest mb-4"
-            >
-              Your scent for today
-            </motion.p>
-            
-            <motion.h1
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="font-cormorant text-4xl text-stone-800 mb-2"
-            >
-              {session.perfume.name}
-            </motion.h1>
-            
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="text-stone-500"
-            >
-              {session.perfume.house}
-            </motion.p>
-          </div>
+          {/* Scent Family Badge */}
+          <motion.div variants={itemVariants} className="flex justify-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/80">
+              <span
+                className={cn(
+                  "w-2 h-2 rounded-full",
+                  scentFamily === "fresh" && "bg-teal-500",
+                  scentFamily === "floral" && "bg-rose-500",
+                  scentFamily === "woody" && "bg-amber-600",
+                  scentFamily === "amber" && "bg-orange-500",
+                  scentFamily === "gourmand" && "bg-amber-500",
+                  scentFamily === "musky" && "bg-stone-500",
+                  !["fresh", "floral", "woody", "amber", "gourmand", "musky"].includes(scentFamily) && "bg-stone-400"
+                )}
+              />
+              <span className={cn("text-sm font-medium capitalize", gradient.accent)}>
+                {scentFamily}
+              </span>
+            </div>
+          </motion.div>
+
+          {/* Perfume Name & House */}
+          <motion.div variants={itemVariants} className="text-center py-4">
+            <h1 className="font-cormorant font-light text-4xl md:text-5xl text-stone-800 mb-3 leading-tight">
+              {perfume.name}
+            </h1>
+            <p className="text-stone-500 text-lg tracking-wide">
+              {perfume.house}
+            </p>
+          </motion.div>
 
           {/* Aura Words */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
+            variants={itemVariants}
             className="flex justify-center flex-wrap gap-3"
           >
-            {session.auraWords.map((word) => (
+            {auraWords.map((word) => (
               <span
                 key={word}
-                className="px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full text-stone-700 text-sm font-medium"
+                className="px-5 py-2.5 bg-white/60 backdrop-blur-sm rounded-full text-stone-700 text-sm font-medium border border-white/80 shadow-sm"
               >
                 {word}
               </span>
@@ -153,27 +385,40 @@ export default function TodaysAura() {
           </motion.div>
 
           {/* Editorial Explanation */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
-            className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 border border-white/60"
-          >
-            <p className="text-stone-500 text-xs uppercase tracking-widest mb-3">
-              Why this works today
-            </p>
-            <p className="font-cormorant text-lg text-stone-700 leading-relaxed">
-              {session.editorialExplanation}
+          <motion.div variants={itemVariants}>
+            <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 border border-white/60 shadow-sm">
+              <p className="text-stone-500 text-xs uppercase tracking-widest mb-3">
+                Why this works today
+              </p>
+              {editorialExplanation ? (
+                <p className="font-cormorant text-lg text-stone-700 leading-relaxed">
+                  {editorialExplanation}
+                </p>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center gap-2 text-stone-400"
+                >
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Crafting your story...</span>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Affirmation */}
+          <motion.div variants={itemVariants} className="text-center py-4">
+            <p className="font-cormorant text-xl text-stone-600 italic leading-relaxed">
+              &ldquo;{affirmation || getDefaultAffirmation(mood)}&rdquo;
             </p>
           </motion.div>
 
-          {/* Weather Context */}
+          {/* Weather Context (if available) */}
           {session.weather && session.weather.temperatureCategory && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.1 }}
-              className="text-center text-stone-500 text-sm"
+              variants={itemVariants}
+              className="text-center text-stone-400 text-sm"
             >
               {session.weather.temperature && session.weather.location ? (
                 <span>
@@ -184,91 +429,71 @@ export default function TodaysAura() {
               )}
             </motion.div>
           )}
-
-          {/* Affirmation */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
-            className="text-center py-6"
-          >
-            <p className="font-cormorant text-xl text-stone-600 italic">
-              &ldquo;{session.affirmation}&rdquo;
-            </p>
-          </motion.div>
-        </motion.div>
-
-        {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.4 }}
-          className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-stone-50 via-stone-50/80 to-transparent"
-        >
-          <div className="max-w-lg mx-auto space-y-3">
-            <button
-              onClick={() => {
-                // TODO: Mark as worn in Convex
-                router.push("/collection");
-              }}
-              className="w-full py-4 bg-stone-800 text-white rounded-full font-cormorant text-lg flex items-center justify-center gap-2 hover:bg-stone-700 transition-colors"
-            >
-              <Check className="w-5 h-5" />
-              Wear This Today
-            </button>
-            
-            <button
-              onClick={() => router.push("/ritual")}
-              className="w-full py-3 text-stone-500 hover:text-stone-700 text-sm transition-colors"
-            >
-              Try a different vibe
-            </button>
-          </div>
         </motion.div>
       </div>
-    </AuraGradient>
+
+      {/* Fixed Bottom Action Area */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.2, duration: 0.5 }}
+        className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white/95 to-transparent"
+      >
+        <div className="max-w-lg mx-auto space-y-4">
+          {/* Primary CTA */}
+          <button
+            onClick={handleSaveVibe}
+            className="w-full py-4 bg-stone-800 text-white rounded-full font-cormorant text-lg hover:bg-stone-700 transition-colors shadow-lg"
+          >
+            Save this vibe
+          </button>
+
+          {/* Secondary CTAs */}
+          <div className="flex gap-3">
+            <button
+              onClick={handleLogAsWorn}
+              disabled={isLoggingWorn}
+              className="flex-1 py-3 bg-white/80 backdrop-blur-sm text-stone-700 rounded-full text-sm font-medium hover:bg-white transition-colors border border-stone-200 flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isLoggingWorn ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4" />
+              )}
+              Log as worn
+            </button>
+            <button
+              onClick={handleNewRitual}
+              className="flex-1 py-3 bg-white/80 backdrop-blur-sm text-stone-700 rounded-full text-sm font-medium hover:bg-white transition-colors border border-stone-200"
+            >
+              New ritual
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
-// Helper functions for generating placeholder content
-function getAuraWords(mood: string): string[] {
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+function getDefaultAuraWords(mood?: string): string[] {
   const moodWords: Record<string, string[]> = {
     confident: ["Grounded", "Bold", "Assured"],
     soft: ["Gentle", "Approachable", "Serene"],
     playful: ["Spirited", "Light", "Joyful"],
     mysterious: ["Intriguing", "Subtle", "Deep"],
   };
-  return moodWords[mood] || ["Balanced", "Present", "Authentic"];
+  return moodWords[mood || ""] || ["Balanced", "Present", "Authentic"];
 }
 
-function getAffirmation(mood: string): string {
+function getDefaultAffirmation(mood?: string): string {
   const affirmations: Record<string, string> = {
     confident: "You carry your own warmth today.",
     soft: "Your gentleness is your strength.",
     playful: "Joy radiates from you effortlessly.",
     mysterious: "Let them wonder what your secret is.",
   };
-  return affirmations[mood] || "You are exactly where you need to be.";
-}
-
-function generateEditorialExplanation(data: SessionData): string {
-  const { mood, scents, occasion } = data;
-  
-  // Placeholder editorial copy - in production, this would come from Claude API
-  const templates: Record<string, string> = {
-    confident: `Today calls for something that anchors you without demanding attention. A ${scents[0]} foundation creates a quiet confidence — like wearing your favorite armor, but softer.`,
-    soft: `There's beauty in subtlety today. Let the ${scents[0]} notes wrap around you like a familiar comfort, present but never overwhelming.`,
-    playful: `Your energy today deserves a scent that keeps up. The ${scents[0]} character here adds just enough intrigue without taking itself too seriously.`,
-    mysterious: `Some days call for a little enigma. This ${scents[0]} composition reveals itself slowly, letting others lean in to discover more.`,
-  };
-
-  const base = templates[mood] || templates.confident;
-  
-  if (occasion === "work") {
-    return base + " Perfect for professional settings where you want to be remembered, not overwhelming.";
-  } else if (occasion === "date") {
-    return base + " It leaves just enough mystery for someone to want to come closer.";
-  }
-  
-  return base;
+  return affirmations[mood || ""] || "You are exactly where you need to be.";
 }
