@@ -1,7 +1,7 @@
 // src/app/collection/add/page.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,23 +17,6 @@ interface FragranceResult {
   imageUrl?: string;
 }
 
-// Debounce hook
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-
 export default function AddFragrancePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,41 +26,73 @@ export default function AddFragrancePage() {
   const [fragranceName, setFragranceName] = useState("");
   const [house, setHouse] = useState("");
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
-  const debouncedSearch = useDebounce(searchQuery, 300);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Search for fragrances when debounced query changes
-  const searchFragrances = useCallback(async (query: string) => {
-    if (query.trim().length < 2) {
+  // Debounced search effect - waits 300ms after user stops typing
+  useEffect(() => {
+    // Clear results and errors for short queries
+    if (searchQuery.trim().length < 2) {
       setSearchResults([]);
+      setSearchError(null);
+      setIsSearching(false);
       return;
     }
 
-    setIsSearching(true);
-    try {
-      const response = await fetch(`/api/fragrances/search?q=${encodeURIComponent(query)}&limit=8`);
-      const data = await response.json();
-      
-      if (data.results) {
-        setSearchResults(data.results);
-      } else {
-        setSearchResults([]);
-      }
-    } catch (error) {
-      console.error("Search error:", error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
+    // Cancel any pending request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
-  }, []);
 
-  useEffect(() => {
-    if (debouncedSearch) {
-      searchFragrances(debouncedSearch);
-    } else {
-      setSearchResults([]);
-    }
-  }, [debouncedSearch, searchFragrances]);
+    // Set up debounce timer
+    const timeoutId = setTimeout(async () => {
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      setIsSearching(true);
+      setSearchError(null);
+      try {
+        const response = await fetch(
+          `/api/fragrances/search?q=${encodeURIComponent(searchQuery)}&limit=8`,
+          { signal: controller.signal }
+        );
+        const data = await response.json();
+
+        // Only update if this request wasn't aborted
+        if (!controller.signal.aborted) {
+          if (response.status === 429) {
+            setSearchError("Too many searches. Please wait a moment.");
+            setSearchResults([]);
+          } else if (data.error) {
+            setSearchError(data.error);
+            setSearchResults([]);
+          } else {
+            setSearchResults(data.results || []);
+          }
+        }
+      } catch (error) {
+        // Ignore abort errors
+        if (error instanceof Error && error.name !== "AbortError") {
+          console.error("Search error:", error);
+          setSearchError("Search failed. Try again.");
+          setSearchResults([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsSearching(false);
+        }
+      }
+    }, 300);
+
+    // Cleanup: cancel timer and abort request on unmount or query change
+    return () => {
+      clearTimeout(timeoutId);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [searchQuery]);
 
   const handleSelectFragrance = (fragrance: FragranceResult) => {
     setSelectedFragrance(fragrance);
@@ -134,7 +149,8 @@ export default function AddFragrancePage() {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                // Clear selected fragrance when typing new search
+                // Clear error and selected fragrance when typing new search
+                setSearchError(null);
                 if (selectedFragrance) {
                   setSelectedFragrance(null);
                 }
@@ -148,6 +164,11 @@ export default function AddFragrancePage() {
               </div>
             )}
           </div>
+
+          {/* Search Error - only show if user has typed something */}
+          {searchError && searchQuery.trim().length >= 2 && (
+            <p className="mt-2 font-inter text-sm text-amber-600">{searchError}</p>
+          )}
 
           {/* Search Results Dropdown */}
           {searchResults.length > 0 && (
