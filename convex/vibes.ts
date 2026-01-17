@@ -60,7 +60,16 @@ export const getUserVibes = query({
 export const getVibe = query({
   args: { vibeId: v.id("vibes") },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
     const vibe = await ctx.db.get(args.vibeId);
+
+    // Ensure user owns this vibe
+    if (!vibe || vibe.userId !== identity.subject) {
+      return null;
+    }
+
     return vibe;
   },
 });
