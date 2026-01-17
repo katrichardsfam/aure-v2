@@ -269,20 +269,32 @@ export default function RecommendationResult() {
     sessionId ? { sessionId } : "skip"
   ) as SessionWithPerfume | null | undefined;
 
-  // Mutation for marking as worn
+  // Mutations for marking as worn
   const markWorn = useMutation(api.userPerfumes.markWorn);
+  const logWear = useMutation(api.wearLog.logWear);
 
   // Handle "Log as worn" action
   const handleLogAsWorn = async () => {
-    if (!session?.userPerfume?._id || !user?.id) return;
+    if (!session?.userPerfume?._id || !user?.id || !session?.perfume) return;
 
     setIsLoggingWorn(true);
     try {
+      // Update the userPerfume wear count
       await markWorn({
         userId: user.id,
         userPerfumeId: session.userPerfume._id,
       });
-      router.push("/collection");
+
+      // Log to the wear journal
+      await logWear({
+        perfumeId: session.perfume._id,
+        perfumeName: session.perfume.name,
+        perfumeHouse: session.perfume.house,
+        scentFamily: session.perfume.scentFamily,
+        sessionId: session._id,
+      });
+
+      router.push("/log");
     } catch (error) {
       console.error("Failed to log as worn:", error);
       setIsLoggingWorn(false);

@@ -15,6 +15,7 @@ import type * as sessions from "../sessions.js";
 import type * as userPerfumes from "../userPerfumes.js";
 import type * as userPreferences from "../userPreferences.js";
 import type * as vibes from "../vibes.js";
+import type * as wearLog from "../wearLog.js";
 
 import type {
   ApiFromModules,
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   userPerfumes: typeof userPerfumes;
   userPreferences: typeof userPreferences;
   vibes: typeof vibes;
+  wearLog: typeof wearLog;
 }>;
 
 /**

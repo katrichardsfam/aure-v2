@@ -152,4 +152,19 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_created", ["userId", "createdAt"]),
+
+  // Wear log (scent journal)
+  wearLog: defineTable({
+    userId: v.string(),
+    perfumeId: v.id("perfumes"),
+    perfumeName: v.string(),
+    perfumeHouse: v.optional(v.string()),
+    scentFamily: v.optional(v.string()),
+    vibeId: v.optional(v.id("vibes")),
+    sessionId: v.optional(v.id("sessions")),
+    notes: v.optional(v.string()),
+    wornAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_date", ["userId", "wornAt"]),
 }, { schemaValidation: false });

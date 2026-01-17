@@ -118,7 +118,7 @@ export default function CollectionPage() {
 
                   {/* House */}
                   <p className="font-inter text-sm text-stone-500 mt-1 truncate">
-                    {item.perfume?.house || item.perfume?.brand}
+                    {item.perfume?.house}
                   </p>
 
                   {/* Scent family badge */}
