@@ -67,8 +67,11 @@ export const getWearStats = query({
       return {
         totalWears: 0,
         familyCounts: {},
+        sortedFamilies: [],
         mostWorn: [],
         firstWear: null,
+        lastWear: null,
+        uniquePerfumes: 0,
       };
     }
 
@@ -80,6 +83,11 @@ export const getWearStats = query({
           (familyCounts[entry.scentFamily] || 0) + 1;
       }
     });
+
+    // Sort families by count (descending)
+    const sortedFamilies = Object.entries(familyCounts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([family, count]) => ({ family, count }));
 
     // Find most worn perfumes
     const perfumeCounts: Record<
@@ -103,11 +111,19 @@ export const getWearStats = query({
       .slice(0, 5)
       .map(([id, data]) => ({ perfumeId: id, ...data }));
 
+    // Calculate timestamps
+    const timestamps = entries.map((e) => e.wornAt);
+    const firstWear = Math.min(...timestamps);
+    const lastWear = Math.max(...timestamps);
+
     return {
       totalWears: entries.length,
       familyCounts,
+      sortedFamilies,
       mostWorn,
-      firstWear: entries[entries.length - 1].wornAt,
+      firstWear,
+      lastWear,
+      uniquePerfumes: Object.keys(perfumeCounts).length,
     };
   },
 });
