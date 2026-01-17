@@ -6,6 +6,9 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { useMutation } from "convex/react";
+import { useUser } from "@clerk/nextjs";
+import { api } from "../../../../convex/_generated/api";
 
 const MOOD_TAGS = ["Confident", "Soft", "Playful", "Mysterious"] as const;
 
@@ -19,6 +22,9 @@ interface FragranceResult {
 
 export default function AddFragrancePage() {
   const router = useRouter();
+  const { user } = useUser();
+  const addToCollection = useMutation(api.userPerfumes.addToCollection);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<FragranceResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -27,6 +33,8 @@ export default function AddFragrancePage() {
   const [house, setHouse] = useState("");
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -109,9 +117,46 @@ export default function AddFragrancePage() {
     );
   };
 
-  const handleSave = () => {
-    // TODO: Save to Convex
-    router.push("/collection");
+  const handleSave = async () => {
+    if (!user?.id) {
+      setSaveError("Please sign in to save fragrances");
+      return;
+    }
+
+    // Determine which fragrance data to use
+    const name = selectedFragrance?.name || fragranceName.trim();
+    const fragranceHouse = selectedFragrance?.house || house.trim();
+
+    if (!name) {
+      setSaveError("Please enter a fragrance name");
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      await addToCollection({
+        userId: user.id,
+        name,
+        house: fragranceHouse || "Unknown",
+        scentFamily: selectedFragrance?.scentFamily,
+        imageUrl: selectedFragrance?.imageUrl,
+        externalId: selectedFragrance?.id,
+        moods: selectedMoods.length > 0 ? selectedMoods : undefined,
+      });
+
+      router.push("/collection");
+    } catch (error) {
+      console.error("Failed to save fragrance:", error);
+      if (error instanceof Error) {
+        setSaveError(error.message);
+      } else {
+        setSaveError("Failed to save. Please try again.");
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const canSave = selectedFragrance !== null || fragranceName.trim() !== "";
@@ -273,18 +318,30 @@ export default function AddFragrancePage() {
 
       {/* Fixed bottom save button */}
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-stone-50 via-stone-50 to-transparent">
+        {saveError && (
+          <p className="font-inter text-sm text-red-500 text-center mb-3">
+            {saveError}
+          </p>
+        )}
         <motion.button
-          whileHover={{ scale: canSave ? 1.02 : 1 }}
-          whileTap={{ scale: canSave ? 0.98 : 1 }}
+          whileHover={{ scale: canSave && !isSaving ? 1.02 : 1 }}
+          whileTap={{ scale: canSave && !isSaving ? 0.98 : 1 }}
           onClick={handleSave}
-          disabled={!canSave}
-          className={`w-full font-inter px-6 py-4 rounded-full transition-colors ${
-            canSave
+          disabled={!canSave || isSaving}
+          className={`w-full font-inter px-6 py-4 rounded-full transition-colors flex items-center justify-center gap-2 ${
+            canSave && !isSaving
               ? "bg-stone-800 text-white hover:bg-stone-900"
               : "bg-stone-300 text-stone-500 cursor-not-allowed"
           }`}
         >
-          Save to Vault
+          {isSaving ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            "Save to Vault"
+          )}
         </motion.button>
       </div>
     </div>

@@ -8,13 +8,29 @@
  * @module
  */
 
+import type * as perfumes from "../perfumes.js";
+import type * as recommendation from "../recommendation.js";
+import type * as seed from "../seed.js";
+import type * as sessions from "../sessions.js";
+import type * as userPerfumes from "../userPerfumes.js";
+import type * as userPreferences from "../userPreferences.js";
+import type * as vibes from "../vibes.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
 
-declare const fullApi: ApiFromModules<{}>;
+declare const fullApi: ApiFromModules<{
+  perfumes: typeof perfumes;
+  recommendation: typeof recommendation;
+  seed: typeof seed;
+  sessions: typeof sessions;
+  userPerfumes: typeof userPerfumes;
+  userPreferences: typeof userPreferences;
+  vibes: typeof vibes;
+}>;
 
 /**
  * A utility for referencing Convex functions in your app's public API.

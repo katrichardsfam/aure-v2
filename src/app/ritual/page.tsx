@@ -37,16 +37,9 @@ export default function RitualPage() {
   }, []);
 
   const handleFindScent = () => {
-    if (selectedOccasion) {
-      sessionStorage.setItem("ritual_occasion", selectedOccasion);
-      if (selectedVenue) {
-        sessionStorage.setItem("ritual_venue", selectedVenue);
-      }
-      if (weather) {
-        sessionStorage.setItem("ritual_weather", JSON.stringify(weather));
-      }
-      router.push("/aura");
-    }
+    console.log("Button clicked! selectedOccasion:", selectedOccasion);
+    // Start the multi-step ritual flow
+    router.push("/ritual/style");
   };
 
   // Calculate progress based on selections
@@ -199,15 +192,10 @@ export default function RitualPage() {
       {/* Fixed bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white/80 to-transparent backdrop-blur-sm">
         <motion.button
-          whileHover={{ scale: selectedOccasion ? 1.02 : 1 }}
-          whileTap={{ scale: selectedOccasion ? 0.98 : 1 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleFindScent}
-          disabled={!selectedOccasion}
-          className={`w-full font-inter px-6 py-4 rounded-full transition-colors ${
-            selectedOccasion
-              ? "bg-stone-800 text-white hover:bg-stone-900"
-              : "bg-stone-300 text-stone-500 cursor-not-allowed"
-          }`}
+          className="w-full font-inter px-6 py-4 rounded-full transition-colors bg-stone-800 text-white hover:bg-stone-900"
         >
           Find my scent
         </motion.button>

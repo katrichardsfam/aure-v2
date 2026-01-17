@@ -6,6 +6,9 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, MapPin, Cloud, Sun, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useMutation } from "convex/react";
+import { useUser } from "@clerk/nextjs";
+import { api } from "../../../../convex/_generated/api";
 import { AuraGradient } from "@/components/AuraGradient";
 import { Wordmark } from "@/components/Wordmark";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -17,11 +20,16 @@ type WeatherMode = "auto" | "manual" | "skip";
 
 export default function WeatherStep() {
   const router = useRouter();
+  const { user } = useUser();
+  // Use the new mutation that creates session AND generates recommendation
+  const createSession = useMutation(api.sessions.createWithRecommendation);
+
   const [mode, setMode] = useState<WeatherMode>("auto");
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [manualTemp, setManualTemp] = useState<string | null>(null);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   useEffect(() => {
     if (mode === "auto") {
@@ -48,28 +56,70 @@ export default function WeatherStep() {
     }
   };
 
-  const handleContinue = () => {
-    if (mode === "skip") {
-      sessionStorage.setItem("ritual_weather", JSON.stringify(null));
-    } else if (weather) {
-      sessionStorage.setItem("ritual_weather", JSON.stringify({
-        temperature: weather.temperature,
-        temperatureCategory: weather.temperatureCategory,
-        humidity: weather.humidity,
-        humidityCategory: weather.humidityCategory,
-        condition: weather.condition,
-        location: weather.location,
-        isManual: mode === "manual",
-      }));
-    } else if (manualTemp) {
-      sessionStorage.setItem("ritual_weather", JSON.stringify({
-        temperatureCategory: manualTemp,
-        isManual: true,
-      }));
+  const handleContinue = async () => {
+    if (!user?.id) {
+      setError("Please sign in to continue");
+      return;
     }
-    
-    // Navigate to aura result
-    router.push("/aura");
+
+    setIsCreatingSession(true);
+
+    try {
+      // Gather all ritual data from sessionStorage
+      const stylesRaw = sessionStorage.getItem("ritual_styles");
+      const outfitStyles = stylesRaw ? JSON.parse(stylesRaw) : [];
+
+      const mood = sessionStorage.getItem("ritual_mood") || "confident";
+
+      const scentsRaw = sessionStorage.getItem("ritual_scents");
+      const scentDirections = scentsRaw ? JSON.parse(scentsRaw) : [];
+
+      const occasion = sessionStorage.getItem("ritual_occasion") || "casual";
+
+      // Build weather object
+      let weatherData = undefined;
+      if (mode !== "skip") {
+        if (weather) {
+          weatherData = {
+            temperature: weather.temperature,
+            temperatureCategory: weather.temperatureCategory as "hot" | "warm" | "mild" | "cool" | "cold",
+            humidity: weather.humidity,
+            humidityCategory: weather.humidityCategory as "dry" | "moderate" | "humid" | undefined,
+            condition: weather.condition,
+            location: weather.location,
+            isManual: mode === "manual",
+          };
+        } else if (manualTemp) {
+          weatherData = {
+            temperatureCategory: manualTemp as "hot" | "warm" | "mild" | "cool" | "cold",
+            isManual: true,
+          };
+        }
+      }
+
+      // Create session in Convex
+      const sessionId = await createSession({
+        userId: user.id,
+        outfitStyles,
+        mood,
+        scentDirections,
+        occasion,
+        weather: weatherData,
+      });
+
+      // Clear sessionStorage
+      sessionStorage.removeItem("ritual_styles");
+      sessionStorage.removeItem("ritual_mood");
+      sessionStorage.removeItem("ritual_scents");
+      sessionStorage.removeItem("ritual_occasion");
+
+      // Navigate to aura result with session ID
+      router.push(`/aura?session=${sessionId}`);
+    } catch (err) {
+      console.error("Failed to create session:", err);
+      setError("Something went wrong. Please try again.");
+      setIsCreatingSession(false);
+    }
   };
 
   const weatherTip = weather 
@@ -235,11 +285,20 @@ export default function WeatherStep() {
             </button>
             <button
               onClick={handleContinue}
-              disabled={!canContinue}
+              disabled={!canContinue || isCreatingSession}
               className="flex-1 py-4 bg-stone-800 text-white rounded-full font-cormorant text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stone-700 transition-colors"
             >
-              See My Aura
-              <ArrowRight className="w-5 h-5" />
+              {isCreatingSession ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  See My Aura
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
             </button>
           </div>
         </div>

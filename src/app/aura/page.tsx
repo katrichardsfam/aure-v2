@@ -11,7 +11,47 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { Check, Sparkles, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { Wordmark } from "@/components/Wordmark";
+import SaveVibeModal from "@/components/SaveVibeModal";
 import { cn } from "@/lib/utils";
+
+// Type for session data with augmented perfume info from sessions.get
+interface SessionWithPerfume {
+  _id: Id<"sessions">;
+  userId: string;
+  outfitStyles: string[];
+  mood: string;
+  scentDirections: string[];
+  occasion: string;
+  weather?: {
+    temperature?: number;
+    temperatureCategory: "hot" | "warm" | "mild" | "cool" | "cold";
+    humidity?: number;
+    humidityCategory?: "dry" | "moderate" | "humid";
+    condition?: string;
+    location?: string;
+    isManual: boolean;
+  };
+  recommendedPerfumeId?: Id<"userPerfumes">;
+  recommendationType?: string;
+  matchScore?: number;
+  editorialExplanation?: string;
+  affirmation?: string;
+  completedAt?: number;
+  createdAt: number;
+  // Augmented fields from sessions.get
+  perfume?: {
+    _id: Id<"perfumes">;
+    name: string;
+    house: string;
+    scentFamily: string;
+    auraWords?: string[];
+  };
+  userPerfume?: {
+    _id: Id<"userPerfumes">;
+    perfumeId: Id<"perfumes">;
+    userId: string;
+  };
+}
 
 // ============================================
 // SCENT FAMILY GRADIENTS & STYLES
@@ -107,7 +147,7 @@ const orbVariants = {
     transition: {
       duration: 8,
       repeat: Infinity,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
     },
   },
 };
@@ -216,16 +256,18 @@ export default function RecommendationResult() {
   const searchParams = useSearchParams();
   const { user, isLoaded: isUserLoaded } = useUser();
   const [isLoggingWorn, setIsLoggingWorn] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   // Get session ID from URL
   const sessionIdParam = searchParams.get("session");
   const sessionId = sessionIdParam as Id<"sessions"> | null;
 
   // Fetch session data from Convex
+  // The sessions.get query returns session data augmented with perfume and userPerfume
   const session = useQuery(
     api.sessions.get,
     sessionId ? { sessionId } : "skip"
-  );
+  ) as SessionWithPerfume | null | undefined;
 
   // Mutation for marking as worn
   const markWorn = useMutation(api.userPerfumes.markWorn);
@@ -249,8 +291,7 @@ export default function RecommendationResult() {
 
   // Handle "Save this vibe" action
   const handleSaveVibe = () => {
-    // TODO: Implement save modal in next iteration
-    alert("Save feature coming soon! Your vibe has been noted.");
+    setShowSaveModal(true);
   };
 
   // Handle "New ritual" action
@@ -471,6 +512,19 @@ export default function RecommendationResult() {
           </div>
         </div>
       </motion.div>
+
+      {/* Save Vibe Modal */}
+      <SaveVibeModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        sessionId={sessionId as Id<"sessions">}
+        perfumeName={perfume.name || ""}
+        perfumeHouse={perfume.house || ""}
+        scentFamily={scentFamily}
+        auraWords={auraWords}
+        mood={mood || ""}
+        occasion={session.occasion || ""}
+      />
     </div>
   );
 }

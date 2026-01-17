@@ -59,7 +59,7 @@ export default defineSchema({
       temperatureBoost: v.optional(v.number()), // -2 to +2 score modifier
       humidityBoost: v.optional(v.number()),
     }),
-    description: v.string(),
+    description: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
   })
     .index("by_scent_family", ["scentFamily"])
@@ -133,4 +133,23 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
-});
+
+  // Saved vibes (scent moments)
+  vibes: defineTable({
+    userId: v.string(),
+    sessionId: v.id("sessions"),
+    name: v.string(),
+    notes: v.optional(v.string()),
+    hasImage: v.boolean(),
+    // Denormalized data for fast display
+    perfumeName: v.string(),
+    perfumeHouse: v.string(),
+    scentFamily: v.string(),
+    auraWords: v.array(v.string()),
+    mood: v.string(),
+    occasion: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_created", ["userId", "createdAt"]),
+}, { schemaValidation: false });
