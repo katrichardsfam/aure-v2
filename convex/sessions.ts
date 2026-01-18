@@ -162,6 +162,7 @@ export const createWithRecommendation = mutation({
     mood: v.string(),
     scentDirections: v.array(v.string()),
     occasion: v.string(),
+    outfitImageUrl: v.optional(v.string()),
     weather: v.optional(v.object({
       temperature: v.optional(v.number()),
       temperatureCategory: weatherConditions,
@@ -188,6 +189,7 @@ export const createWithRecommendation = mutation({
       mood: args.mood,
       scentDirections: args.scentDirections,
       occasion: args.occasion,
+      outfitImageUrl: args.outfitImageUrl,
       weather: args.weather,
       createdAt: Date.now(),
     });

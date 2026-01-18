@@ -25,7 +25,7 @@ export interface OutfitAnalysis {
 }
 
 interface OutfitInputProps {
-  onAnalysisComplete: (analysis: OutfitAnalysis) => void;
+  onAnalysisComplete: (analysis: OutfitAnalysis, imageUrl: string | null) => void;
   onSkip: () => void;
 }
 
@@ -140,7 +140,7 @@ export default function OutfitInput({ onAnalysisComplete, onSkip }: OutfitInputP
   // Use the AI suggestions
   const handleUseSuggestions = () => {
     if (analysis) {
-      onAnalysisComplete(analysis);
+      onAnalysisComplete(analysis, imagePreview);
     }
   };
 

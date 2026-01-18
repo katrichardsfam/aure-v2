@@ -91,6 +91,7 @@ export default defineSchema({
     mood: v.string(),
     scentDirections: v.array(v.string()),
     occasion: v.string(),
+    outfitImageUrl: v.optional(v.string()), // Base64 data URL of outfit photo
     // Weather context (auto-detected or manual)
     weather: v.optional(v.object({
       temperature: v.optional(v.number()),

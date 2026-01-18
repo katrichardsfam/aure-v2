@@ -36,6 +36,7 @@ interface SessionWithPerfume {
   mood: string;
   scentDirections: string[];
   occasion: string;
+  outfitImageUrl?: string; // Outfit photo from ritual flow
   weather?: {
     temperature?: number;
     temperatureCategory: "hot" | "warm" | "mild" | "cool" | "cold";
@@ -590,6 +591,7 @@ function AuraContent() {
         auraWords={auraWords}
         mood={mood || ""}
         occasion={session.occasion || ""}
+        outfitImageUrl={session.outfitImageUrl}
         onSaveSuccess={() => setIsSaved(true)}
       />
     </div>

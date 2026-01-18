@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Camera, Sparkles } from "lucide-react";
 import { useMutation } from "convex/react";
@@ -18,6 +18,7 @@ interface SaveVibeModalProps {
   auraWords: string[];
   mood: string;
   occasion: string;
+  outfitImageUrl?: string | null; // Pre-populated outfit image from ritual flow
   onSaveSuccess?: () => void; // Optional callback for when save succeeds (instead of navigating)
 }
 
@@ -46,6 +47,7 @@ export default function SaveVibeModal({
   auraWords,
   mood,
   occasion,
+  outfitImageUrl,
   onSaveSuccess,
 }: SaveVibeModalProps) {
   const router = useRouter();
@@ -53,14 +55,25 @@ export default function SaveVibeModal({
 
   const [vibeName, setVibeName] = useState("");
   const [notes, setNotes] = useState("");
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // Initialize with outfit image from ritual flow if available
+  const [imagePreview, setImagePreview] = useState<string | null>(outfitImageUrl || null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [usingSessionImage, setUsingSessionImage] = useState(!!outfitImageUrl);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
   // Get the mutations
   const saveVibe = useMutation(api.vibes.saveVibe);
   const generateUploadUrl = useMutation(api.storage.generateUploadUrl);
+
+  // Update image preview when modal opens with outfit image from session
+  useEffect(() => {
+    if (isOpen && outfitImageUrl) {
+      setImagePreview(outfitImageUrl);
+      setUsingSessionImage(true);
+      setSelectedFile(null);
+    }
+  }, [isOpen, outfitImageUrl]);
 
   const colors =
     scentFamilyColors[scentFamily?.toLowerCase()] || scentFamilyColors.woody;
@@ -70,6 +83,7 @@ export default function SaveVibeModal({
     if (file) {
       // Store the file for upload
       setSelectedFile(file);
+      setUsingSessionImage(false); // User is replacing the session image
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -77,6 +91,19 @@ export default function SaveVibeModal({
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Helper to convert data URL to Blob
+  const dataUrlToBlob = (dataUrl: string): Blob => {
+    const parts = dataUrl.split(",");
+    const mime = parts[0].match(/:(.*?);/)?.[1] || "image/jpeg";
+    const bstr = atob(parts[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
   };
 
   const handleSave = async () => {
@@ -90,17 +117,32 @@ export default function SaveVibeModal({
     setIsSaving(true);
 
     try {
-      // Upload image if one was selected
+      // Upload image if one exists (either new file or session image)
       let outfitImageId: Id<"_storage"> | undefined;
-      if (selectedFile) {
-        // Get upload URL from Convex
-        const uploadUrl = await generateUploadUrl();
 
-        // Upload the file
+      if (selectedFile) {
+        // New file was selected - upload it
+        const uploadUrl = await generateUploadUrl();
         const response = await fetch(uploadUrl, {
           method: "POST",
           headers: { "Content-Type": selectedFile.type },
           body: selectedFile,
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to upload image");
+        }
+
+        const { storageId } = await response.json();
+        outfitImageId = storageId;
+      } else if (usingSessionImage && imagePreview) {
+        // Using session image (data URL) - convert to blob and upload
+        const uploadUrl = await generateUploadUrl();
+        const blob = dataUrlToBlob(imagePreview);
+        const response = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": blob.type },
+          body: blob,
         });
 
         if (!response.ok) {
@@ -153,8 +195,9 @@ export default function SaveVibeModal({
   const handleClose = () => {
     setVibeName("");
     setNotes("");
-    setImagePreview(null);
+    setImagePreview(outfitImageUrl || null);
     setSelectedFile(null);
+    setUsingSessionImage(!!outfitImageUrl);
     setError("");
     onClose();
   };
@@ -290,6 +333,7 @@ export default function SaveVibeModal({
                         onClick={() => {
                           setImagePreview(null);
                           setSelectedFile(null);
+                          setUsingSessionImage(false);
                           if (fileInputRef.current) {
                             fileInputRef.current.value = "";
                           }

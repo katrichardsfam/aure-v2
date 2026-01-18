@@ -36,6 +36,7 @@ export default function RitualPage() {
 
   // AI analysis from outfit
   const [outfitAnalysis, setOutfitAnalysis] = useState<OutfitAnalysis | null>(null);
+  const [outfitImageUrl, setOutfitImageUrl] = useState<string | null>(null);
 
   // User selections
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
@@ -122,8 +123,9 @@ export default function RitualPage() {
   };
 
   // Handle outfit analysis complete
-  const handleOutfitAnalysisComplete = (analysis: OutfitAnalysis) => {
+  const handleOutfitAnalysisComplete = (analysis: OutfitAnalysis, imageUrl: string | null) => {
     setOutfitAnalysis(analysis);
+    setOutfitImageUrl(imageUrl);
 
     // Pre-fill from AI suggestions
     if (analysis.moodInference) {
@@ -154,6 +156,7 @@ export default function RitualPage() {
         mood: selectedMoods[0] || "confident",
         scentDirections: selectedScentDirections,
         occasion: selectedOccasion,
+        outfitImageUrl: outfitImageUrl || undefined,
         weather: weather ? {
           temperature: weather.temperature,
           temperatureCategory: getTemperatureCategory(weather.temperature),
