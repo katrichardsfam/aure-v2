@@ -59,6 +59,7 @@ interface SessionWithPerfume {
     house: string;
     scentFamily: string;
     auraWords?: string[];
+    imageUrl?: string;
   };
   userPerfume?: {
     _id: Id<"userPerfumes">;
@@ -409,6 +410,20 @@ function AuraContent() {
           animate="visible"
           className="space-y-6"
         >
+          {/* Perfume Image - Hero display */}
+          {perfume.imageUrl && (
+            <motion.div variants={itemVariants} className="flex justify-center">
+              <div className="w-full max-w-xs">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={perfume.imageUrl}
+                  alt={perfume.name}
+                  className="w-full h-56 object-contain mx-auto drop-shadow-lg"
+                />
+              </div>
+            </motion.div>
+          )}
+
           {/* Scent Family Badge - only show if we have a real scent family */}
           {scentFamily && scentFamily !== "default" && (
             <motion.div variants={itemVariants} className="flex justify-center">

@@ -9,7 +9,6 @@ import {
   Camera,
   ImagePlus,
   FileText,
-  SkipForward,
   Sparkles,
   ArrowRight,
   X,
@@ -172,51 +171,49 @@ export default function OutfitInput({ onAnalysisComplete, onSkip }: OutfitInputP
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {/* Camera button */}
               <button
                 onClick={() => cameraInputRef.current?.click()}
-                className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/80 hover:bg-white/80 transition-all flex flex-col items-center gap-3"
+                className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/80 hover:bg-white/80 transition-all flex flex-col items-center gap-2"
               >
-                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-                  <Camera className="w-6 h-6 text-amber-600" />
+                <div className="w-11 h-11 rounded-full bg-amber-100 flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-amber-600" />
                 </div>
-                <span className="font-inter text-sm text-stone-700">Take Photo</span>
+                <span className="font-inter text-xs text-stone-700">Photo</span>
               </button>
 
               {/* Upload button */}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/80 hover:bg-white/80 transition-all flex flex-col items-center gap-3"
+                className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/80 hover:bg-white/80 transition-all flex flex-col items-center gap-2"
               >
-                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-                  <ImagePlus className="w-6 h-6 text-amber-600" />
+                <div className="w-11 h-11 rounded-full bg-amber-100 flex items-center justify-center">
+                  <ImagePlus className="w-5 h-5 text-amber-600" />
                 </div>
-                <span className="font-inter text-sm text-stone-700">Upload</span>
+                <span className="font-inter text-xs text-stone-700">Upload</span>
               </button>
 
               {/* Text description button */}
               <button
                 onClick={() => setMode("text")}
-                className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/80 hover:bg-white/80 transition-all flex flex-col items-center gap-3"
+                className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/80 hover:bg-white/80 transition-all flex flex-col items-center gap-2"
               >
-                <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-stone-600" />
+                <div className="w-11 h-11 rounded-full bg-stone-100 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-stone-600" />
                 </div>
-                <span className="font-inter text-sm text-stone-700">Describe</span>
-              </button>
-
-              {/* Skip button */}
-              <button
-                onClick={onSkip}
-                className="bg-white/40 backdrop-blur-sm rounded-2xl p-6 border border-stone-200 hover:bg-white/60 transition-all flex flex-col items-center gap-3"
-              >
-                <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center">
-                  <SkipForward className="w-6 h-6 text-stone-500" />
-                </div>
-                <span className="font-inter text-sm text-stone-500">Skip</span>
+                <span className="font-inter text-xs text-stone-700">Describe</span>
               </button>
             </div>
+
+            {/* Skip link */}
+            <button
+              onClick={onSkip}
+              className="w-full pt-4 flex items-center justify-center gap-1.5 text-stone-400 hover:text-stone-600 transition-colors"
+            >
+              <span className="font-inter text-sm">Skip</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
 
             {/* Hidden file inputs */}
             <input
