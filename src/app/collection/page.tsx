@@ -274,7 +274,7 @@ export default function CollectionPage() {
                     </button>
 
                     <Link href={`/collection/${item._id}`}>
-                      <div className={`bg-gradient-to-br ${styles.gradient} rounded-lg p-2 border border-white/60 shadow-sm hover:shadow-md transition-all cursor-pointer`}>
+                      <div className={`bg-gradient-to-br ${styles.gradient} rounded-lg p-2 border border-white/60 shadow-sm hover:shadow-md transition-all cursor-pointer h-[140px] flex flex-col`}>
                         {/* Fragrance image or placeholder */}
                         <FragranceImage
                           src={item.perfume?.imageUrl}
@@ -283,14 +283,14 @@ export default function CollectionPage() {
                           styles={styles}
                         />
 
-                        {/* Info section */}
-                        <div className="mt-1.5">
-                          {/* Name */}
+                        {/* Info section - fixed height to prevent grid breaking */}
+                        <div className="mt-1.5 flex-1 min-w-0">
+                          {/* Name - max 2 lines */}
                           <h3 className="font-cormorant font-medium text-xs text-stone-800 leading-tight line-clamp-2">
                             {item.perfume?.name}
                           </h3>
 
-                          {/* House */}
+                          {/* House - single line with ellipsis */}
                           <p className="font-inter text-[10px] text-stone-500 truncate">
                             {item.perfume?.house}
                           </p>
