@@ -1,211 +1,124 @@
 "use client";
 
-import { motion } from "framer-motion";
-import Link from "next/link";
-import { Sparkles } from "lucide-react";
-
-// ===========================================
-// COMING SOON PLACEHOLDER
-// Enable the full implementation below once
-// the wearLog Convex functions are deployed
-// ===========================================
-
-export default function AuraProfilePage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
-      {/* Atmospheric background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-72 h-72 bg-amber-100/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-40 left-10 w-56 h-56 bg-rose-100/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 pb-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
-        >
-          {/* Icon */}
-          <div className="w-20 h-20 bg-white/60 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-white/80">
-            <Sparkles className="w-10 h-10 text-amber-600" />
-          </div>
-
-          {/* Title */}
-          <h1 className="font-cormorant font-light text-3xl text-stone-900 mb-3">
-            Aura Profile
-          </h1>
-
-          {/* Subtitle */}
-          <p className="font-inter text-stone-500 mb-2">
-            Coming soon
-          </p>
-          <p className="font-inter text-sm text-stone-400 max-w-xs mx-auto mb-8">
-            Discover your evolving scent story and see patterns in your fragrance choices
-          </p>
-
-          {/* CTA */}
-          <Link href="/ritual">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-inter rounded-full hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg"
-            >
-              Start a Ritual
-            </motion.button>
-          </Link>
-        </motion.div>
-      </div>
-    </div>
-  );
-}
-
-// ===========================================
-// FULL IMPLEMENTATION (ENABLE WHEN READY)
-// ===========================================
-/*
-"use client";
-
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Sparkles, TrendingUp, Calendar, Droplets } from "lucide-react";
+import { Sparkles, Flame, Calendar, Heart } from "lucide-react";
 
-// Scent family metadata
+// Scent family metadata for narrative generation and styling
 const SCENT_FAMILIES: Record<
   string,
   {
     emoji: string;
-    color: string;
     gradient: string;
+    barGradient: string;
+    bgGradient: string;
     trait: string;
-    description: string;
+    narrative: string;
   }
 > = {
   fresh: {
     emoji: "\u{1F343}",
-    color: "text-emerald-600",
-    gradient: "from-lime-100 to-emerald-100",
+    gradient: "from-emerald-400 to-cyan-400",
+    barGradient: "from-emerald-400 via-cyan-400 to-emerald-200",
+    bgGradient: "from-emerald-50 via-cyan-50/30 to-stone-50",
     trait: "clarity-seeking",
-    description: "drawn to brightness and energy",
+    narrative: "You carry the bright energy of citrus and green notes — refreshing, optimistic, with a clarity that awakens the senses.",
   },
   floral: {
     emoji: "\u{1F338}",
-    color: "text-pink-600",
-    gradient: "from-pink-100 to-rose-100",
+    gradient: "from-pink-400 to-rose-400",
+    barGradient: "from-pink-400 via-rose-400 to-pink-200",
+    bgGradient: "from-pink-50 via-rose-50/30 to-stone-50",
     trait: "romantic",
-    description: "drawn to softness and beauty",
+    narrative: "Your aura blooms with floral elegance — soft, romantic, with a beauty that unfolds like petals in morning light.",
   },
   woody: {
     emoji: "\u{1FAB5}",
-    color: "text-amber-700",
-    gradient: "from-amber-100 to-orange-100",
+    gradient: "from-amber-500 to-orange-400",
+    barGradient: "from-amber-500 via-orange-400 to-amber-200",
+    bgGradient: "from-amber-50 via-orange-50/30 to-stone-50",
     trait: "grounded",
-    description: "drawn to depth and stability",
+    narrative: "You carry the quiet confidence of woods and earth — grounding, warm, with a depth that lingers long after you've gone.",
   },
   amber: {
     emoji: "\u{2728}",
-    color: "text-orange-600",
-    gradient: "from-orange-100 to-yellow-100",
+    gradient: "from-orange-400 to-amber-400",
+    barGradient: "from-orange-400 via-amber-400 to-yellow-200",
+    bgGradient: "from-orange-50 via-amber-50/30 to-stone-50",
     trait: "warm-hearted",
-    description: "drawn to warmth and comfort",
+    narrative: "Your presence radiates amber warmth — inviting, comforting, like golden light on a late afternoon.",
   },
   gourmand: {
     emoji: "\u{1F36F}",
-    color: "text-amber-600",
-    gradient: "from-amber-100 to-rose-100",
+    gradient: "from-amber-400 to-rose-400",
+    barGradient: "from-amber-400 via-rose-300 to-amber-200",
+    bgGradient: "from-amber-50 via-rose-50/20 to-stone-50",
     trait: "sensual",
-    description: "drawn to indulgence and pleasure",
+    narrative: "You embody indulgence — sweet, sensual notes that speak of pleasure and the art of savoring life's richness.",
   },
   musky: {
     emoji: "\u{1F319}",
-    color: "text-slate-600",
-    gradient: "from-stone-100 to-zinc-100",
+    gradient: "from-slate-400 to-zinc-400",
+    barGradient: "from-slate-400 via-zinc-400 to-slate-200",
+    bgGradient: "from-stone-100 via-zinc-50/30 to-stone-50",
     trait: "intimate",
-    description: "drawn to subtlety and closeness",
+    narrative: "Your scent signature whispers rather than shouts — intimate, subtle, drawing others closer to discover your mystery.",
   },
   oriental: {
     emoji: "\u{1F52E}",
-    color: "text-purple-600",
-    gradient: "from-purple-100 to-pink-100",
+    gradient: "from-purple-400 to-pink-400",
+    barGradient: "from-purple-400 via-pink-400 to-purple-200",
+    bgGradient: "from-purple-50 via-pink-50/30 to-stone-50",
     trait: "mysterious",
-    description: "drawn to complexity and intrigue",
+    narrative: "You wear mystery like a second skin — complex, intriguing, with layers that reveal themselves slowly over time.",
   },
   aquatic: {
     emoji: "\u{1F30A}",
-    color: "text-cyan-600",
-    gradient: "from-cyan-100 to-blue-100",
+    gradient: "from-cyan-400 to-blue-400",
+    barGradient: "from-cyan-400 via-blue-400 to-cyan-200",
+    bgGradient: "from-cyan-50 via-blue-50/30 to-stone-50",
     trait: "free-spirited",
-    description: "drawn to openness and freedom",
+    narrative: "Your aura flows with oceanic freedom — fresh, boundless, like an endless horizon calling to adventure.",
   },
   green: {
     emoji: "\u{1F33F}",
-    color: "text-green-600",
-    gradient: "from-green-100 to-emerald-100",
+    gradient: "from-green-400 to-emerald-400",
+    barGradient: "from-green-400 via-emerald-400 to-green-200",
+    bgGradient: "from-green-50 via-emerald-50/30 to-stone-50",
     trait: "natural",
-    description: "drawn to authentic freshness",
+    narrative: "You carry nature's authenticity — verdant, alive, with the honest freshness of a garden after rain.",
   },
   powdery: {
     emoji: "\u{2601}",
-    color: "text-violet-500",
-    gradient: "from-violet-100 to-pink-100",
+    gradient: "from-violet-400 to-pink-300",
+    barGradient: "from-violet-400 via-pink-300 to-violet-200",
+    bgGradient: "from-violet-50 via-pink-50/30 to-stone-50",
     trait: "gentle",
-    description: "drawn to softness and nostalgia",
+    narrative: "Your presence is soft as clouds — gentle, nostalgic, evoking tender memories and quiet comfort.",
   },
 };
 
-// Type for stats
+const DEFAULT_FAMILY = {
+  emoji: "\u{2728}",
+  gradient: "from-amber-400 to-stone-400",
+  barGradient: "from-amber-400 via-stone-400 to-amber-200",
+  bgGradient: "from-stone-50 via-amber-50/20 to-stone-100",
+  trait: "evolving",
+  narrative: "Your scent story is beautifully unique — a blend of influences that defies easy categorization.",
+};
+
+// Type for stats from Convex
 interface WearStats {
   totalWears: number;
-  familyCounts: Record<string, number>;
-  sortedFamilies: { family: string; count: number }[];
-  mostWorn: { perfumeId: string; count: number; name: string; house?: string }[];
+  currentStreak: number;
+  favoriteFamily: string | null;
+  favoritePerfume: { name: string; house: string; wearCount: number } | null;
+  familyBreakdown: Array<{ family: string; percentage: number }>;
+  uniquePerfumes: number;
   firstWear: number | null;
   lastWear: number | null;
-  uniquePerfumes: number;
-}
-
-// Generate narrative based on stats
-function generateNarrative(stats: WearStats | null): string {
-  if (!stats || stats.totalWears === 0) {
-    return "Your scent story is just beginning. Each fragrance you wear adds another layer to your evolving aura.";
-  }
-
-  const topFamily = stats.sortedFamilies[0];
-  const secondFamily = stats.sortedFamilies[1];
-  const topPerfume = stats.mostWorn[0];
-
-  const topMeta = SCENT_FAMILIES[topFamily?.family] || SCENT_FAMILIES.amber;
-
-  // Calculate days since first wear
-  const daysSinceFirst = stats.firstWear
-    ? Math.floor((Date.now() - stats.firstWear) / (1000 * 60 * 60 * 24))
-    : 0;
-  const timePhrase =
-    daysSinceFirst < 7
-      ? "this week"
-      : daysSinceFirst < 30
-        ? "this month"
-        : daysSinceFirst < 90
-          ? "recently"
-          : "over time";
-
-  let narrative = `Your aura speaks of someone ${topMeta.trait}\u2014${topMeta.description}. `;
-
-  if (secondFamily) {
-    const secondMeta = SCENT_FAMILIES[secondFamily.family] || SCENT_FAMILIES.woody;
-    narrative += `There's also a ${secondMeta.trait} undercurrent in your choices. `;
-  }
-
-  if (topPerfume && topPerfume.count > 1) {
-    narrative += `${topPerfume.name} has become a signature, worn ${topPerfume.count} times ${timePhrase}. `;
-  }
-
-  narrative += `You've dressed your presence ${stats.totalWears} times across ${stats.uniquePerfumes} different fragrances.`;
-
-  return narrative;
 }
 
 // Animation variants
@@ -213,7 +126,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+    transition: { staggerChildren: 0.12, delayChildren: 0.1 },
   },
 };
 
@@ -232,202 +145,206 @@ export default function AuraProfilePage() {
   // Loading state
   if (stats === undefined) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" />
+      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 animate-pulse mx-auto mb-4" />
+          <p className="text-stone-400 font-inter text-sm">Revealing your aura...</p>
+        </div>
       </div>
     );
   }
 
+  // Check if user has data
   const hasData = stats && stats.totalWears > 0;
-  const narrative = generateNarrative(stats);
-  const topFamily = stats?.sortedFamilies?.[0];
-  const topMeta = topFamily ? SCENT_FAMILIES[topFamily.family] : null;
 
-  // Determine background gradient based on dominant family
-  const bgGradient = topMeta?.gradient || "from-stone-50 to-stone-100";
+  // Get dominant family styling
+  const dominantFamily = stats?.favoriteFamily || null;
+  const familyMeta = dominantFamily
+    ? (SCENT_FAMILIES[dominantFamily] || DEFAULT_FAMILY)
+    : DEFAULT_FAMILY;
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${bgGradient}`}>
+    <div className={`min-h-screen bg-gradient-to-br ${familyMeta.bgGradient}`}>
+      {/* Atmospheric background orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-72 h-72 bg-white/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-40 left-10 w-56 h-56 bg-amber-100/20 rounded-full blur-3xl" />
+        <div className="absolute top-20 right-10 w-72 h-72 bg-white/40 rounded-full blur-3xl" />
+        <div className="absolute bottom-40 left-10 w-56 h-56 bg-amber-100/30 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
       </div>
 
       <motion.main
-        className="relative z-10 px-6 pt-16 pb-32 max-w-lg mx-auto"
+        className="relative z-10 px-6 pt-12 pb-32 max-w-lg mx-auto"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={itemVariants} className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/40 backdrop-blur rounded-full mb-6">
-            <Sparkles className="w-4 h-4 text-amber-600" />
+        {/* Header */}
+        <motion.div variants={itemVariants} className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/50 backdrop-blur-sm rounded-full mb-6 border border-white/60">
+            <Sparkles className="w-4 h-4 text-amber-500" />
             <span className="font-inter text-sm text-stone-600">Your Aura</span>
           </div>
-          <h1 className="font-cormorant font-light text-4xl md:text-5xl text-stone-900 leading-tight">
-            {hasData ? "Your Scent Story" : "Begin Your Story"}
+          <h1 className="font-cormorant font-light text-4xl text-stone-900 leading-tight">
+            {hasData ? "Your Scent Story" : "Your Aura Awaits"}
           </h1>
         </motion.div>
 
-        <motion.div
-          variants={itemVariants}
-          className="bg-white/50 backdrop-blur-sm rounded-3xl p-8 mb-8 border border-white/60"
-        >
-          <p className="font-cormorant text-xl text-stone-700 leading-relaxed text-center">
-            {narrative}
-          </p>
-        </motion.div>
-
-        {hasData && stats && (
-          <>
-            <motion.div variants={itemVariants} className="mb-8">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="w-4 h-4 text-stone-500" />
-                <span className="font-inter text-sm text-stone-500 uppercase tracking-wide">
-                  Your Scent Signatures
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {stats.sortedFamilies.slice(0, 4).map((family, index) => {
-                  const meta = SCENT_FAMILIES[family.family] || SCENT_FAMILIES.amber;
-                  const percentage = Math.round(
-                    (family.count / stats.totalWears) * 100
-                  );
-
-                  return (
-                    <div
-                      key={family.family}
-                      className="bg-white/40 backdrop-blur rounded-2xl p-4 border border-white/50"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{meta.emoji}</span>
-                          <div>
-                            <p className="font-cormorant text-lg text-stone-800 capitalize">
-                              {family.family}
-                            </p>
-                            <p className="font-inter text-xs text-stone-500">
-                              {meta.trait}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="font-cormorant text-2xl text-stone-700">
-                          {percentage}%
-                        </span>
-                      </div>
-
-                      <div className="h-1.5 bg-stone-200/50 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${percentage}%` }}
-                          transition={{ duration: 0.8, delay: 0.3 + index * 0.1 }}
-                          className={`h-full bg-gradient-to-r ${meta.gradient.replace("to-", "via-")} to-transparent rounded-full`}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-
-            <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3 mb-8">
-              <div className="bg-white/40 backdrop-blur rounded-2xl p-4 text-center border border-white/50">
-                <p className="font-cormorant text-3xl text-stone-800">
-                  {stats.totalWears}
-                </p>
-                <p className="font-inter text-xs text-stone-500 mt-1">days dressed</p>
-              </div>
-              <div className="bg-white/40 backdrop-blur rounded-2xl p-4 text-center border border-white/50">
-                <p className="font-cormorant text-3xl text-stone-800">
-                  {stats.uniquePerfumes}
-                </p>
-                <p className="font-inter text-xs text-stone-500 mt-1">fragrances</p>
-              </div>
-              <div className="bg-white/40 backdrop-blur rounded-2xl p-4 text-center border border-white/50">
-                <p className="font-cormorant text-3xl text-stone-800">
-                  {stats.sortedFamilies.length}
-                </p>
-                <p className="font-inter text-xs text-stone-500 mt-1">families</p>
-              </div>
-            </motion.div>
-
-            {stats.mostWorn.length > 0 && (
-              <motion.div variants={itemVariants}>
-                <div className="flex items-center gap-2 mb-4">
-                  <Droplets className="w-4 h-4 text-stone-500" />
-                  <span className="font-inter text-sm text-stone-500 uppercase tracking-wide">
-                    Your Signatures
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  {stats.mostWorn.slice(0, 3).map((perfume, index) => (
-                    <div
-                      key={perfume.perfumeId}
-                      className="bg-white/30 backdrop-blur rounded-xl p-3 flex items-center justify-between border border-white/40"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center font-inter text-xs text-amber-700">
-                          {index + 1}
-                        </span>
-                        <div>
-                          <p className="font-cormorant text-stone-800">
-                            {perfume.name}
-                          </p>
-                          {perfume.house && (
-                            <p className="font-inter text-xs text-stone-500">
-                              {perfume.house}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <span className="font-inter text-sm text-stone-500">
-                        {perfume.count}&times;
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </>
-        )}
-
+        {/* Empty State */}
         {!hasData && (
-          <motion.div variants={itemVariants} className="text-center">
-            <p className="font-inter text-stone-500 mb-6">
-              Start wearing fragrances to build your aura profile
+          <motion.div variants={itemVariants} className="text-center py-12">
+            <div className="w-24 h-24 bg-white/60 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm border border-white/80">
+              <span className="text-5xl">✨</span>
+            </div>
+            <h2 className="font-cormorant text-2xl text-stone-800 mb-3">
+              Your aura is still forming...
+            </h2>
+            <p className="font-inter text-stone-500 text-sm max-w-xs mx-auto mb-8 leading-relaxed">
+              Wear some scents and your profile will evolve into a beautiful reflection of your fragrance journey.
             </p>
             <Link href="/ritual">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="bg-stone-800 text-white font-inter px-8 py-3 rounded-full"
+                className="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-inter rounded-full hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg"
               >
-                Get your first recommendation
+                Start your journey
               </motion.button>
             </Link>
           </motion.div>
         )}
 
-        {hasData && stats?.firstWear && (
-          <motion.div variants={itemVariants} className="mt-12 text-center">
-            <div className="flex items-center justify-center gap-2 text-stone-400">
-              <Calendar className="w-4 h-4" />
-              <span className="font-inter text-sm">
-                Journey started{" "}
-                {new Date(stats.firstWear).toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </span>
-            </div>
-          </motion.div>
+        {/* Content when user has data */}
+        {hasData && stats && (
+          <>
+            {/* Hero Narrative */}
+            <motion.div
+              variants={itemVariants}
+              className="bg-white/50 backdrop-blur-sm rounded-3xl p-8 mb-8 border border-white/60 shadow-sm"
+            >
+              <p className="font-cormorant text-xl text-stone-700 leading-relaxed text-center italic">
+                &ldquo;{familyMeta.narrative}&rdquo;
+              </p>
+            </motion.div>
+
+            {/* Quick Stats */}
+            <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3 mb-8">
+              <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/60">
+                <p className="font-cormorant text-3xl text-stone-800">
+                  {stats.totalWears}
+                </p>
+                <p className="font-inter text-xs text-stone-500 mt-1">wears</p>
+              </div>
+              <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/60">
+                <div className="flex items-center justify-center gap-1">
+                  <Flame className="w-4 h-4 text-amber-500" />
+                  <p className="font-cormorant text-3xl text-stone-800">
+                    {stats.currentStreak}
+                  </p>
+                </div>
+                <p className="font-inter text-xs text-stone-500 mt-1">day streak</p>
+              </div>
+              <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/60">
+                <p className="font-cormorant text-3xl text-stone-800">
+                  {stats.uniquePerfumes}
+                </p>
+                <p className="font-inter text-xs text-stone-500 mt-1">fragrances</p>
+              </div>
+            </motion.div>
+
+            {/* Scent Family Breakdown */}
+            {stats.familyBreakdown.length > 0 && (
+              <motion.div variants={itemVariants} className="mb-8">
+                <h2 className="font-inter text-xs text-stone-500 uppercase tracking-widest mb-4">
+                  Your Scent Signatures
+                </h2>
+                <div className="space-y-3">
+                  {stats.familyBreakdown.slice(0, 4).map((item, index) => {
+                    const meta = SCENT_FAMILIES[item.family] || DEFAULT_FAMILY;
+                    return (
+                      <div
+                        key={item.family}
+                        className="bg-white/40 backdrop-blur-sm rounded-2xl p-4 border border-white/50"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{meta.emoji}</span>
+                            <div>
+                              <p className="font-cormorant text-lg text-stone-800 capitalize">
+                                {item.family}
+                              </p>
+                              <p className="font-inter text-xs text-stone-500">
+                                {meta.trait}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="font-cormorant text-2xl text-stone-700">
+                            {item.percentage}%
+                          </span>
+                        </div>
+                        <div className="h-2 bg-stone-200/50 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${item.percentage}%` }}
+                            transition={{ duration: 0.8, delay: 0.3 + index * 0.1 }}
+                            className={`h-full bg-gradient-to-r ${meta.barGradient} rounded-full`}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Signature Perfume */}
+            {stats.favoritePerfume && (
+              <motion.div variants={itemVariants} className="mb-8">
+                <h2 className="font-inter text-xs text-stone-500 uppercase tracking-widest mb-4">
+                  Your Signature
+                </h2>
+                <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-5 border border-white/60">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center shadow-sm">
+                      <Heart className="w-6 h-6 text-amber-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-cormorant text-xl text-stone-800">
+                        {stats.favoritePerfume.name}
+                      </p>
+                      <p className="font-inter text-sm text-stone-500">
+                        {stats.favoritePerfume.house}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-cormorant text-2xl text-amber-600">
+                        {stats.favoritePerfume.wearCount}
+                      </p>
+                      <p className="font-inter text-xs text-stone-400">wears</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Journey Start Date */}
+            {stats.firstWear && (
+              <motion.div variants={itemVariants} className="text-center pt-4">
+                <div className="inline-flex items-center gap-2 text-stone-400">
+                  <Calendar className="w-4 h-4" />
+                  <span className="font-inter text-sm">
+                    Journey began{" "}
+                    {new Date(stats.firstWear).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </>
         )}
       </motion.main>
     </div>
   );
 }
-*/

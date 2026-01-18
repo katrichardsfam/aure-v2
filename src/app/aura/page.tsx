@@ -1,7 +1,7 @@
 // src/app/aura/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
@@ -13,6 +13,20 @@ import Link from "next/link";
 import { Wordmark } from "@/components/Wordmark";
 import SaveVibeModal from "@/components/SaveVibeModal";
 import { cn } from "@/lib/utils";
+
+// ============================================
+// SUSPENSE LOADING FALLBACK
+// ============================================
+function AuraLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 animate-pulse mx-auto mb-4" />
+        <p className="text-stone-400 font-cormorant text-lg">Revealing your aura...</p>
+      </div>
+    </div>
+  );
+}
 
 // Type for session data with augmented perfume info from sessions.get
 interface SessionWithPerfume {
@@ -249,9 +263,9 @@ function ErrorState({
 }
 
 // ============================================
-// MAIN COMPONENT
+// MAIN COMPONENT (uses useSearchParams)
 // ============================================
-export default function RecommendationResult() {
+function AuraContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isLoaded: isUserLoaded } = useUser();
@@ -555,4 +569,15 @@ function getDefaultAffirmation(mood?: string): string {
     mysterious: "Let them wonder what your secret is.",
   };
   return affirmations[mood || ""] || "You are exactly where you need to be.";
+}
+
+// ============================================
+// DEFAULT EXPORT WITH SUSPENSE BOUNDARY
+// ============================================
+export default function AuraPage() {
+  return (
+    <Suspense fallback={<AuraLoading />}>
+      <AuraContent />
+    </Suspense>
+  );
 }

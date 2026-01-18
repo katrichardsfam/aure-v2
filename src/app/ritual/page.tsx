@@ -226,8 +226,8 @@ export default function RitualPage() {
         </motion.div>
       </div>
 
-      {/* Fixed bottom CTA */}
-      <div className="fixed bottom-24 left-0 right-0 px-6 z-40">
+      {/* Fixed bottom CTA with solid background */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-white via-white to-white/0 pt-8 pb-28 px-6">
         <motion.button
           whileHover={selectedOccasion ? { scale: 1.02 } : {}}
           whileTap={selectedOccasion ? { scale: 0.98 } : {}}
