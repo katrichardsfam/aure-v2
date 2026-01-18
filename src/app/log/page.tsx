@@ -1,5 +1,71 @@
 "use client";
 
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { BookOpen } from "lucide-react";
+
+// ===========================================
+// COMING SOON PLACEHOLDER
+// Enable the full implementation below once
+// the wearLog Convex functions are deployed
+// ===========================================
+
+export default function VibeCheckLogPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
+      {/* Atmospheric background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-10 w-64 h-64 bg-amber-100/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-40 left-10 w-48 h-48 bg-stone-200/30 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 pb-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          {/* Icon */}
+          <div className="w-20 h-20 bg-white/60 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-white/80">
+            <BookOpen className="w-10 h-10 text-amber-600" />
+          </div>
+
+          {/* Title */}
+          <h1 className="font-cormorant font-light text-3xl text-stone-900 mb-3">
+            Scent Journal
+          </h1>
+
+          {/* Subtitle */}
+          <p className="font-inter text-stone-500 mb-2">
+            Coming soon
+          </p>
+          <p className="font-inter text-sm text-stone-400 max-w-xs mx-auto mb-8">
+            Track your fragrance journey and see what you&apos;ve worn over time
+          </p>
+
+          {/* CTA */}
+          <Link href="/collection">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-8 py-3 bg-stone-800 text-white font-inter rounded-full hover:bg-stone-700 transition-colors"
+            >
+              Back to Collection
+            </motion.button>
+          </Link>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+// ===========================================
+// FULL IMPLEMENTATION (ENABLE WHEN READY)
+// ===========================================
+/*
+"use client";
+
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { motion } from "framer-motion";
@@ -130,7 +196,6 @@ export default function VibeCheckLogPage() {
 
   return (
     <div className="min-h-screen bg-stone-50">
-      {/* Header */}
       <header className="px-6 pt-12 pb-6">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -146,7 +211,6 @@ export default function VibeCheckLogPage() {
         </motion.div>
       </header>
 
-      {/* Empty state */}
       {wearHistory.length === 0 && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -174,7 +238,6 @@ export default function VibeCheckLogPage() {
         </motion.div>
       )}
 
-      {/* Timeline feed */}
       {wearHistory.length > 0 && (
         <motion.div
           className="px-6 pb-24"
@@ -188,7 +251,6 @@ export default function VibeCheckLogPage() {
 
             return (
               <motion.div key={dateKey} variants={itemVariants} className="mb-8">
-                {/* Date header */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex items-center gap-2 text-stone-500">
                     <Calendar className="w-4 h-4" />
@@ -199,7 +261,6 @@ export default function VibeCheckLogPage() {
                   <div className="flex-1 h-px bg-stone-200" />
                 </div>
 
-                {/* Entries for this date */}
                 <div className="space-y-3">
                   {entries.map((entry, entryIndex) => {
                     const bg =
@@ -217,12 +278,10 @@ export default function VibeCheckLogPage() {
                         className={`${bg} rounded-2xl p-4 border border-white/50`}
                       >
                         <div className="flex items-start gap-4">
-                          {/* Emoji indicator */}
                           <div className="w-12 h-12 bg-white/60 backdrop-blur rounded-xl flex items-center justify-center text-2xl shrink-0">
                             {emoji}
                           </div>
 
-                          {/* Content */}
                           <div className="flex-1 min-w-0">
                             <p className="font-cormorant text-lg text-stone-800 truncate">
                               {entry.perfumeName}
@@ -239,7 +298,6 @@ export default function VibeCheckLogPage() {
                             )}
                           </div>
 
-                          {/* Scent family badge */}
                           {entry.scentFamily && (
                             <span className="px-3 py-1 bg-white/60 backdrop-blur rounded-full text-xs font-inter text-stone-600 capitalize shrink-0">
                               {entry.scentFamily}
@@ -247,7 +305,6 @@ export default function VibeCheckLogPage() {
                           )}
                         </div>
 
-                        {/* Link to vibe if exists */}
                         {entry.vibeId && (
                           <Link
                             href={`/vibes/${entry.vibeId}`}
@@ -266,8 +323,8 @@ export default function VibeCheckLogPage() {
         </motion.div>
       )}
 
-      {/* Bottom nav spacer */}
       <div className="h-20" />
     </div>
   );
 }
+*/

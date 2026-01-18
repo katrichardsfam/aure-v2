@@ -5,6 +5,9 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useMutation } from "convex/react";
+import { useUser } from "@clerk/nextjs";
+import { api } from "../../../convex/_generated/api";
 
 const OCCASIONS = ["Work", "Date", "Casual", "Event", "Home"] as const;
 const VENUES = ["Indoors", "Outdoors", "Both"] as const;
@@ -17,10 +20,14 @@ interface WeatherData {
 
 export default function RitualPage() {
   const router = useRouter();
+  const { user } = useUser();
   const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
   const [selectedVenue, setSelectedVenue] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [editingWeather, setEditingWeather] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const createSession = useMutation(api.sessions.createWithRecommendation);
 
   // Clear previous session and simulate weather fetch
   useEffect(() => {
@@ -36,10 +43,40 @@ export default function RitualPage() {
     });
   }, []);
 
-  const handleFindScent = () => {
-    console.log("Button clicked! selectedOccasion:", selectedOccasion);
-    // Start the multi-step ritual flow
-    router.push("/ritual/style");
+  // Helper to get temperature category from Fahrenheit
+  const getTemperatureCategory = (temp: number): "hot" | "warm" | "mild" | "cool" | "cold" => {
+    if (temp >= 85) return "hot";
+    if (temp >= 70) return "warm";
+    if (temp >= 55) return "mild";
+    if (temp >= 40) return "cool";
+    return "cold";
+  };
+
+  const handleRevealAura = async () => {
+    if (!selectedOccasion || !user?.id) return;
+
+    setIsLoading(true);
+    try {
+      const sessionId = await createSession({
+        userId: user.id,
+        outfitStyles: [], // Default empty - can be expanded later
+        mood: "confident", // Default mood - can be expanded later
+        scentDirections: [], // Default empty - will match any
+        occasion: selectedOccasion,
+        weather: weather ? {
+          temperature: weather.temperature,
+          temperatureCategory: getTemperatureCategory(weather.temperature),
+          humidity: weather.humidity,
+          condition: weather.condition,
+          isManual: false,
+        } : undefined,
+      });
+
+      router.push(`/aura?session=${sessionId}`);
+    } catch (error) {
+      console.error("Failed to create session:", error);
+      setIsLoading(false);
+    }
   };
 
   // Calculate progress based on selections
@@ -190,14 +227,26 @@ export default function RitualPage() {
       </div>
 
       {/* Fixed bottom CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white/80 to-transparent backdrop-blur-sm">
+      <div className="fixed bottom-24 left-0 right-0 px-6 z-40">
         <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleFindScent}
-          className="w-full font-inter px-6 py-4 rounded-full transition-colors bg-stone-800 text-white hover:bg-stone-900"
+          whileHover={selectedOccasion ? { scale: 1.02 } : {}}
+          whileTap={selectedOccasion ? { scale: 0.98 } : {}}
+          onClick={handleRevealAura}
+          disabled={!selectedOccasion || isLoading}
+          className={`w-full max-w-md mx-auto block font-inter py-4 px-8 rounded-full shadow-lg transition-all ${
+            selectedOccasion && !isLoading
+              ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700"
+              : "bg-gradient-to-r from-amber-500 to-amber-600 text-white opacity-50 cursor-not-allowed"
+          }`}
         >
-          Find my scent
+          {isLoading ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Revealing...
+            </span>
+          ) : (
+            "Reveal Today's Aura"
+          )}
         </motion.button>
       </div>
     </div>

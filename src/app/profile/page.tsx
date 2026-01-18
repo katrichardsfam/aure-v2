@@ -1,5 +1,72 @@
 "use client";
 
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { Sparkles } from "lucide-react";
+
+// ===========================================
+// COMING SOON PLACEHOLDER
+// Enable the full implementation below once
+// the wearLog Convex functions are deployed
+// ===========================================
+
+export default function AuraProfilePage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100">
+      {/* Atmospheric background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-10 w-72 h-72 bg-amber-100/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-40 left-10 w-56 h-56 bg-rose-100/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 pb-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          {/* Icon */}
+          <div className="w-20 h-20 bg-white/60 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-white/80">
+            <Sparkles className="w-10 h-10 text-amber-600" />
+          </div>
+
+          {/* Title */}
+          <h1 className="font-cormorant font-light text-3xl text-stone-900 mb-3">
+            Aura Profile
+          </h1>
+
+          {/* Subtitle */}
+          <p className="font-inter text-stone-500 mb-2">
+            Coming soon
+          </p>
+          <p className="font-inter text-sm text-stone-400 max-w-xs mx-auto mb-8">
+            Discover your evolving scent story and see patterns in your fragrance choices
+          </p>
+
+          {/* CTA */}
+          <Link href="/ritual">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-inter rounded-full hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg"
+            >
+              Start a Ritual
+            </motion.button>
+          </Link>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+// ===========================================
+// FULL IMPLEMENTATION (ENABLE WHEN READY)
+// ===========================================
+/*
+"use client";
+
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { motion } from "framer-motion";
@@ -181,21 +248,18 @@ export default function AuraProfilePage() {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br ${bgGradient}`}>
-      {/* Atmospheric elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-10 w-72 h-72 bg-white/30 rounded-full blur-3xl" />
         <div className="absolute bottom-40 left-10 w-56 h-56 bg-amber-100/20 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
       </div>
 
-      {/* Content */}
       <motion.main
         className="relative z-10 px-6 pt-16 pb-32 max-w-lg mx-auto"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Header */}
         <motion.div variants={itemVariants} className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/40 backdrop-blur rounded-full mb-6">
             <Sparkles className="w-4 h-4 text-amber-600" />
@@ -206,7 +270,6 @@ export default function AuraProfilePage() {
           </h1>
         </motion.div>
 
-        {/* Narrative paragraph */}
         <motion.div
           variants={itemVariants}
           className="bg-white/50 backdrop-blur-sm rounded-3xl p-8 mb-8 border border-white/60"
@@ -216,10 +279,8 @@ export default function AuraProfilePage() {
           </p>
         </motion.div>
 
-        {/* Stats section - only show if data exists */}
         {hasData && stats && (
           <>
-            {/* Dominant families */}
             <motion.div variants={itemVariants} className="mb-8">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp className="w-4 h-4 text-stone-500" />
@@ -257,7 +318,6 @@ export default function AuraProfilePage() {
                         </span>
                       </div>
 
-                      {/* Progress bar */}
                       <div className="h-1.5 bg-stone-200/50 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
@@ -272,7 +332,6 @@ export default function AuraProfilePage() {
               </div>
             </motion.div>
 
-            {/* Quick stats */}
             <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3 mb-8">
               <div className="bg-white/40 backdrop-blur rounded-2xl p-4 text-center border border-white/50">
                 <p className="font-cormorant text-3xl text-stone-800">
@@ -294,7 +353,6 @@ export default function AuraProfilePage() {
               </div>
             </motion.div>
 
-            {/* Most worn */}
             {stats.mostWorn.length > 0 && (
               <motion.div variants={itemVariants}>
                 <div className="flex items-center gap-2 mb-4">
@@ -336,7 +394,6 @@ export default function AuraProfilePage() {
           </>
         )}
 
-        {/* Empty state CTA */}
         {!hasData && (
           <motion.div variants={itemVariants} className="text-center">
             <p className="font-inter text-stone-500 mb-6">
@@ -354,7 +411,6 @@ export default function AuraProfilePage() {
           </motion.div>
         )}
 
-        {/* Journey timestamp */}
         {hasData && stats?.firstWear && (
           <motion.div variants={itemVariants} className="mt-12 text-center">
             <div className="flex items-center justify-center gap-2 text-stone-400">
@@ -374,3 +430,4 @@ export default function AuraProfilePage() {
     </div>
   );
 }
+*/

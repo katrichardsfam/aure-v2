@@ -88,7 +88,6 @@ export default function SaveVibeModal({
         sessionId,
         name: vibeName.trim(),
         notes: notes.trim() || undefined,
-        // For MVP, we'll skip actual image upload - just store that one was intended
         hasImage: !!imagePreview,
         perfumeName,
         perfumeHouse,
@@ -101,9 +100,10 @@ export default function SaveVibeModal({
       // Success - close modal and navigate
       onClose();
       router.push("/vibes");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to save vibe:", err);
-      setError("Something went wrong. Please try again.");
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      setError(message.includes("authenticated") ? "Please log in to save vibes" : "Something went wrong. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -144,9 +144,12 @@ export default function SaveVibeModal({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto"
+            className="fixed inset-x-0 bottom-0 z-[60] max-h-[90vh] overflow-y-auto isolate"
           >
-            <div className="bg-white rounded-t-3xl shadow-2xl">
+            <div
+              className="bg-white rounded-t-3xl shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Drag Handle */}
               <div className="flex justify-center pt-4 pb-2">
                 <div className="w-12 h-1.5 bg-stone-200 rounded-full" />
@@ -242,11 +245,11 @@ export default function SaveVibeModal({
                   />
 
                   {imagePreview ? (
-                    <div className="relative rounded-xl overflow-hidden">
+                    <div className="relative bg-stone-100 rounded-xl p-2">
                       <img
                         src={imagePreview}
                         alt="Outfit preview"
-                        className="w-full h-40 object-cover"
+                        className="w-full max-h-64 object-contain rounded-lg mx-auto"
                       />
                       <button
                         onClick={() => {
@@ -255,7 +258,7 @@ export default function SaveVibeModal({
                             fileInputRef.current.value = "";
                           }
                         }}
-                        className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+                        className="absolute top-3 right-3 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -290,10 +293,14 @@ export default function SaveVibeModal({
 
               {/* Save Button */}
               <div className="px-6 pt-6 pb-8">
+                {error && !error.includes("name") && (
+                  <p className="text-sm text-red-500 text-center mb-3">{error}</p>
+                )}
                 <button
+                  type="button"
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="w-full bg-stone-800 hover:bg-stone-900 disabled:bg-stone-400 text-white font-medium px-6 py-4 rounded-full transition-all flex items-center justify-center gap-2 shadow-lg shadow-stone-800/20"
+                  className="w-full bg-stone-800 hover:bg-stone-900 disabled:bg-stone-400 disabled:cursor-not-allowed text-white font-medium px-6 py-4 rounded-full transition-all flex items-center justify-center gap-2 shadow-lg shadow-stone-800/20"
                 >
                   {isSaving ? (
                     <>

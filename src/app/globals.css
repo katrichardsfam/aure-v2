@@ -385,3 +385,13 @@ textarea {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* ============================================
+   Tailwind Utility Layer
+   ============================================ */
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  }
+}

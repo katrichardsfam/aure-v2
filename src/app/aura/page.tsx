@@ -368,7 +368,7 @@ export default function RecommendationResult() {
     <div className={cn("min-h-screen bg-gradient-to-br", gradient.bg)}>
       <FloatingOrbs scentFamily={scentFamily} />
 
-      <div className="relative z-10 px-6 py-8 pb-56">
+      <div className="relative z-10 px-6 py-8 pb-32">
         {/* Header */}
         <motion.header
           initial={{ opacity: 0, y: -10 }}
@@ -389,7 +389,7 @@ export default function RecommendationResult() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="space-y-8"
+          className="space-y-6"
         >
           {/* Scent Family Badge */}
           <motion.div variants={itemVariants} className="flex justify-center">
@@ -413,8 +413,8 @@ export default function RecommendationResult() {
           </motion.div>
 
           {/* Perfume Name & House */}
-          <motion.div variants={itemVariants} className="text-center py-4">
-            <h1 className="font-cormorant font-light text-4xl md:text-5xl text-stone-800 mb-3 leading-tight">
+          <motion.div variants={itemVariants} className="text-center py-2">
+            <h1 className="font-cormorant font-light text-4xl md:text-5xl text-stone-800 mb-2 leading-tight">
               {perfume.name}
             </h1>
             <p className="text-stone-500 text-lg tracking-wide">
@@ -482,31 +482,22 @@ export default function RecommendationResult() {
               )}
             </motion.div>
           )}
-        </motion.div>
-      </div>
 
-      {/* Fixed Bottom Action Area */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2, duration: 0.5 }}
-        className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white/95 to-transparent"
-      >
-        <div className="max-w-lg mx-auto space-y-4">
-          {/* Primary CTA */}
-          <button
-            onClick={handleSaveVibe}
-            className="w-full py-4 bg-stone-800 text-white rounded-full font-cormorant text-lg hover:bg-stone-700 transition-colors shadow-lg"
-          >
-            Save this vibe
-          </button>
+          {/* Action Buttons */}
+          <motion.div variants={itemVariants} className="pt-6 space-y-3">
+            {/* Primary CTA - Save this vibe */}
+            <button
+              onClick={handleSaveVibe}
+              className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-full font-inter font-medium text-base hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg active:scale-[0.98]"
+            >
+              Save this vibe
+            </button>
 
-          {/* Secondary CTAs */}
-          <div className="flex gap-3">
+            {/* Secondary CTA - Log as worn */}
             <button
               onClick={handleLogAsWorn}
               disabled={isLoggingWorn}
-              className="flex-1 py-3 bg-white/80 backdrop-blur-sm text-stone-700 rounded-full text-sm font-medium hover:bg-white transition-colors border border-stone-200 flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3 bg-white/80 backdrop-blur-sm text-stone-700 rounded-full font-inter text-sm font-medium hover:bg-white transition-colors border border-stone-300 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98]"
             >
               {isLoggingWorn ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -515,15 +506,17 @@ export default function RecommendationResult() {
               )}
               Log as worn
             </button>
+
+            {/* Tertiary - New ritual link */}
             <button
               onClick={handleNewRitual}
-              className="flex-1 py-3 bg-white/80 backdrop-blur-sm text-stone-700 rounded-full text-sm font-medium hover:bg-white transition-colors border border-stone-200"
+              className="w-full py-3 text-stone-500 font-inter text-sm hover:text-stone-700 transition-colors"
             >
-              New ritual
+              Start a new ritual
             </button>
-          </div>
-        </div>
-      </motion.div>
+          </motion.div>
+        </motion.div>
+      </div>
 
       {/* Save Vibe Modal */}
       <SaveVibeModal
