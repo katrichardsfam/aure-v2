@@ -239,38 +239,22 @@ export default function VibeDetailPage() {
         </motion.div>
 
         {/* Outfit image - shows when user saved an outfit photo */}
-        {(vibe.outfitImageUrl || vibe.hasImage) && (
-          <motion.div
-            variants={itemVariants}
-            className="bg-white/60 rounded-2xl p-5 mb-6 border border-white/40"
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Camera className="w-4 h-4 text-amber-600" />
+        {vibe.outfitImageUrl && (
+          <motion.div variants={itemVariants} className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Camera className="w-4 h-4 text-stone-500" />
               <span className="font-inter text-sm text-stone-500 uppercase tracking-wide">
                 Your Outfit
               </span>
             </div>
-            {vibe.outfitImageUrl ? (
-              <div className="relative aspect-[4/3] w-full rounded-xl overflow-hidden bg-stone-100">
-                <Image
-                  src={vibe.outfitImageUrl}
-                  alt="Outfit"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 672px"
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl">
-                <div className="w-10 h-10 bg-stone-100 rounded-lg flex items-center justify-center">
-                  <Camera className="w-5 h-5 text-stone-400" />
-                </div>
-                <div>
-                  <p className="font-inter text-sm text-stone-500">Photo saved with this vibe</p>
-                  <p className="font-inter text-xs text-stone-400">Image unavailable</p>
-                </div>
-              </div>
-            )}
+            <div className="bg-stone-100/30 rounded-2xl p-2 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={vibe.outfitImageUrl}
+                alt="Outfit"
+                className="w-full max-h-96 object-contain rounded-xl mx-auto"
+              />
+            </div>
           </motion.div>
         )}
 

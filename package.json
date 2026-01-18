@@ -11,6 +11,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
     "@clerk/nextjs": "^6.36.7",
+    "@google/generative-ai": "^0.24.1",
     "clsx": "^2.1.1",
     "convex": "^1.31.4",
     "framer-motion": "^12.26.2",

@@ -28,33 +28,82 @@ export function categorizeHumidity(humidity: number): HumidityCategory {
   return "humid";
 }
 
+// Map Open-Meteo weather codes to human-readable conditions
+function getConditionFromCode(code: number): string {
+  if (code === 0) return "Clear";
+  if (code <= 3) return "Partly cloudy";
+  if (code <= 48) return "Foggy";
+  if (code <= 57) return "Drizzle";
+  if (code <= 67) return "Rainy";
+  if (code <= 77) return "Snowy";
+  if (code <= 82) return "Showers";
+  if (code <= 86) return "Snow showers";
+  if (code >= 95) return "Thunderstorm";
+  return "Cloudy";
+}
+
+// Get weather icon based on condition
+function getWeatherIcon(condition: string): string {
+  const iconMap: Record<string, string> = {
+    "Clear": "//cdn.weatherapi.com/weather/64x64/day/113.png",
+    "Partly cloudy": "//cdn.weatherapi.com/weather/64x64/day/116.png",
+    "Cloudy": "//cdn.weatherapi.com/weather/64x64/day/119.png",
+    "Foggy": "//cdn.weatherapi.com/weather/64x64/day/143.png",
+    "Drizzle": "//cdn.weatherapi.com/weather/64x64/day/266.png",
+    "Rainy": "//cdn.weatherapi.com/weather/64x64/day/296.png",
+    "Snowy": "//cdn.weatherapi.com/weather/64x64/day/326.png",
+    "Showers": "//cdn.weatherapi.com/weather/64x64/day/353.png",
+    "Snow showers": "//cdn.weatherapi.com/weather/64x64/day/368.png",
+    "Thunderstorm": "//cdn.weatherapi.com/weather/64x64/day/389.png",
+  };
+  return iconMap[condition] || iconMap["Partly cloudy"];
+}
+
 export async function fetchWeatherByCoords(
-  lat: number, 
+  lat: number,
   lon: number
 ): Promise<WeatherData | null> {
   try {
-    const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
-    if (!apiKey) {
-      console.warn("Weather API key not configured");
-      return null;
+    // Use Open-Meteo API (free, no API key needed)
+    const response = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code&temperature_unit=celsius`
+    );
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const tempC = data.current.temperature_2m;
+    const humidity = data.current.relative_humidity_2m;
+    const condition = getConditionFromCode(data.current.weather_code);
+
+    // Try to get location name via reverse geocoding
+    let location = "Current location";
+    try {
+      const geoResponse = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+      );
+      if (geoResponse.ok) {
+        const geoData = await geoResponse.json();
+        const city = geoData.address?.city || geoData.address?.town || geoData.address?.village || geoData.address?.suburb;
+        const country = geoData.address?.country;
+        if (city && country) {
+          location = `${city}, ${country}`;
+        } else if (city) {
+          location = city;
+        }
+      }
+    } catch {
+      // Keep default location if geocoding fails
     }
 
-    const response = await fetch(
-      `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}&aqi=no`
-    );
-    
-    if (!response.ok) return null;
-    
-    const data = await response.json();
-    
     return {
-      temperature: data.current.temp_c,
-      temperatureCategory: categorizeTemperature(data.current.temp_c),
-      humidity: data.current.humidity,
-      humidityCategory: categorizeHumidity(data.current.humidity),
-      condition: data.current.condition.text,
-      location: `${data.location.name}, ${data.location.country}`,
-      icon: data.current.condition.icon,
+      temperature: tempC,
+      temperatureCategory: categorizeTemperature(tempC),
+      humidity: humidity,
+      humidityCategory: categorizeHumidity(humidity),
+      condition,
+      location,
+      icon: getWeatherIcon(condition),
     };
   } catch (error) {
     console.error("Weather fetch failed:", error);
@@ -64,28 +113,26 @@ export async function fetchWeatherByCoords(
 
 export async function fetchWeatherByCity(city: string): Promise<WeatherData | null> {
   try {
-    const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
-    if (!apiKey) {
-      console.warn("Weather API key not configured");
-      return null;
-    }
-
-    const response = await fetch(
-      `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${encodeURIComponent(city)}&aqi=no`
+    // First, geocode the city name using Open-Meteo geocoding
+    const geoResponse = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
     );
-    
-    if (!response.ok) return null;
-    
-    const data = await response.json();
-    
+
+    if (!geoResponse.ok) return null;
+
+    const geoData = await geoResponse.json();
+    if (!geoData.results || geoData.results.length === 0) return null;
+
+    const { latitude, longitude, name, country } = geoData.results[0];
+
+    // Fetch weather for the coordinates
+    const weather = await fetchWeatherByCoords(latitude, longitude);
+    if (!weather) return null;
+
+    // Use the geocoded location name
     return {
-      temperature: data.current.temp_c,
-      temperatureCategory: categorizeTemperature(data.current.temp_c),
-      humidity: data.current.humidity,
-      humidityCategory: categorizeHumidity(data.current.humidity),
-      condition: data.current.condition.text,
-      location: `${data.location.name}, ${data.location.country}`,
-      icon: data.current.condition.icon,
+      ...weather,
+      location: `${name}, ${country}`,
     };
   } catch (error) {
     console.error("Weather fetch failed:", error);

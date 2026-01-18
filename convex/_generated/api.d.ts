@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as gemini from "../gemini.js";
 import type * as perfumes from "../perfumes.js";
 import type * as recommendation from "../recommendation.js";
 import type * as seed from "../seed.js";
@@ -25,6 +26,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  gemini: typeof gemini;
   perfumes: typeof perfumes;
   recommendation: typeof recommendation;
   seed: typeof seed;

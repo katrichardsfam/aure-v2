@@ -52,29 +52,71 @@ export const OUTFIT_STYLES = [
 // MOODS — pick exactly 1
 // ============================================
 export const MOODS = [
-  { 
-    value: "confident", 
-    label: "Confident", 
+  {
+    value: "confident",
+    label: "Confident",
     description: "Bold, assertive energy",
     gradient: "from-amber-400 to-orange-500"
   },
-  { 
-    value: "soft", 
-    label: "Soft", 
+  {
+    value: "soft",
+    label: "Soft",
     description: "Gentle, easy-going",
     gradient: "from-rose-300 to-pink-400"
   },
-  { 
-    value: "playful", 
-    label: "Playful", 
+  {
+    value: "playful",
+    label: "Playful",
     description: "Fun, expressive, spirited",
     gradient: "from-yellow-300 to-lime-400"
   },
-  { 
-    value: "mysterious", 
-    label: "Mysterious", 
+  {
+    value: "mysterious",
+    label: "Mysterious",
     description: "Subtle, intriguing",
     gradient: "from-violet-500 to-purple-600"
+  },
+  {
+    value: "grounded",
+    label: "Grounded",
+    description: "Centered, calm presence",
+    gradient: "from-emerald-400 to-teal-500"
+  },
+  {
+    value: "magnetic",
+    label: "Magnetic",
+    description: "Captivating, draw people in",
+    gradient: "from-fuchsia-400 to-pink-500"
+  },
+  {
+    value: "powerful",
+    label: "Powerful",
+    description: "Strong, commanding",
+    gradient: "from-red-400 to-orange-500"
+  },
+  {
+    value: "fresh",
+    label: "Fresh",
+    description: "Clean, bright energy",
+    gradient: "from-cyan-300 to-blue-400"
+  },
+  {
+    value: "warm",
+    label: "Warm",
+    description: "Inviting, comforting",
+    gradient: "from-orange-300 to-amber-400"
+  },
+  {
+    value: "sexy",
+    label: "Sexy",
+    description: "Alluring, sensual",
+    gradient: "from-rose-500 to-red-500"
+  },
+  {
+    value: "creative",
+    label: "Creative",
+    description: "Artistic, expressive",
+    gradient: "from-indigo-400 to-purple-500"
   },
 ] as const;
 

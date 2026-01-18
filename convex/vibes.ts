@@ -55,10 +55,11 @@ export const getUserVibes = query({
       .order("desc")
       .collect();
 
-    // Fetch perfume images via session -> userPerfume -> perfume chain
+    // Fetch perfume images and outfit images
     const vibesWithImages = await Promise.all(
       vibes.map(async (vibe) => {
         let imageUrl: string | undefined;
+        let outfitImageUrl: string | null = null;
 
         // Try to get image from session's recommended perfume
         const session = await ctx.db.get(vibe.sessionId);
@@ -70,9 +71,15 @@ export const getUserVibes = query({
           }
         }
 
+        // Fetch outfit image URL if exists
+        if (vibe.outfitImageId) {
+          outfitImageUrl = await ctx.storage.getUrl(vibe.outfitImageId);
+        }
+
         return {
           ...vibe,
           imageUrl,
+          outfitImageUrl,
         };
       })
     );

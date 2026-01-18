@@ -25,8 +25,8 @@ const scentFamilyStyles: Record<string, { gradient: string; placeholderBg: strin
 
 const defaultStyle = { gradient: "from-stone-50 to-amber-50", placeholderBg: "from-stone-100 to-amber-100", accent: "text-stone-600" };
 
-// Image component with loading state and fallback
-function VibeImage({
+// Perfume image component with loading state and fallback
+function PerfumeImage({
   src,
   alt,
   styles
@@ -40,14 +40,14 @@ function VibeImage({
 
   if (!src || hasError) {
     return (
-      <div className={`h-full rounded-lg flex items-center justify-center bg-gradient-to-br ${styles.placeholderBg} relative overflow-hidden`}>
-        <Droplets className={`w-8 h-8 ${styles.accent} opacity-40`} />
+      <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-gradient-to-br ${styles.placeholderBg} flex-shrink-0`}>
+        <Droplets className={`w-5 h-5 ${styles.accent} opacity-40`} />
       </div>
     );
   }
 
   return (
-    <div className="h-full rounded-lg overflow-hidden relative bg-white/80">
+    <div className="w-12 h-12 rounded-lg overflow-hidden relative bg-white/80 flex-shrink-0">
       {isLoading && (
         <div className={`absolute inset-0 bg-gradient-to-br ${styles.placeholderBg} animate-pulse`} />
       )}
@@ -55,10 +55,38 @@ function VibeImage({
         src={src}
         alt={alt}
         fill
-        sizes="(max-width: 640px) 40vw, (max-width: 1024px) 25vw, 20vw"
-        className={`object-contain p-1 transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        sizes="48px"
+        className={`object-contain p-0.5 transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
         onLoad={() => setIsLoading(false)}
         onError={() => setHasError(true)}
+      />
+    </div>
+  );
+}
+
+// Outfit image component for vibe cards
+function OutfitImage({
+  src,
+  styles
+}: {
+  src?: string | null;
+  styles: typeof defaultStyle;
+}) {
+  if (!src) {
+    return (
+      <div className={`w-full h-28 rounded-lg flex items-center justify-center bg-gradient-to-br ${styles.placeholderBg}`}>
+        <Droplets className={`w-8 h-8 ${styles.accent} opacity-40`} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-28 rounded-lg overflow-hidden">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt="Outfit"
+        className="w-full h-full object-cover object-top"
       />
     </div>
   );
@@ -157,38 +185,32 @@ export default function VibesPage() {
                         {vibe.name}
                       </p>
 
-                      {/* Perfume image - larger in square card */}
-                      <div className="flex-1 min-h-0">
-                        <VibeImage
-                          src={vibe.imageUrl}
-                          alt={vibe.perfumeName}
+                      {/* Main visual - outfit photo or placeholder */}
+                      <div className="flex-1 min-h-0 flex items-center">
+                        <OutfitImage
+                          src={vibe.outfitImageUrl}
                           styles={styles}
                         />
                       </div>
 
-                      {/* Perfume name */}
-                      <p className="font-inter text-[11px] text-stone-600 truncate mt-2">
-                        {vibe.perfumeName}
-                      </p>
-
-                      {/* Aura words */}
-                      <div className="flex gap-1 mt-1.5 flex-wrap">
-                        {vibe.auraWords.slice(0, 2).map((word, i) => (
-                          <span
-                            key={i}
-                            className="text-[10px] px-1.5 py-0.5 bg-white/60 rounded-full text-stone-500"
-                          >
-                            {word}
-                          </span>
-                        ))}
+                      {/* Perfume info row with small image */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <PerfumeImage
+                          src={vibe.imageUrl}
+                          alt={vibe.perfumeName}
+                          styles={styles}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-inter text-[11px] text-stone-600 truncate">
+                            {vibe.perfumeName}
+                          </p>
+                          {vibe.auraWords.length > 0 && (
+                            <p className="text-[10px] text-stone-400 truncate">
+                              {vibe.auraWords.slice(0, 2).join(" · ")}
+                            </p>
+                          )}
+                        </div>
                       </div>
-
-                      {/* Occasion badge */}
-                      {vibe.occasion && (
-                        <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 bg-stone-800/10 rounded text-stone-600">
-                          {vibe.occasion}
-                        </span>
-                      )}
                     </div>
                   </Link>
                 </motion.div>

@@ -552,6 +552,14 @@ function AuraContent() {
             >
               Start a new ritual
             </button>
+
+            {/* Back to Vault link */}
+            <Link
+              href="/collection"
+              className="w-full py-2 text-stone-400 font-inter text-sm hover:text-stone-600 transition-colors block text-center"
+            >
+              Back to Vault
+            </Link>
           </motion.div>
         </motion.div>
       </div>
