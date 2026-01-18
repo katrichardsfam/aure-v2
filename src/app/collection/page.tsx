@@ -3,27 +3,71 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { useQuery } from "convex/react";
 import { useUser } from "@clerk/nextjs";
 import { api } from "../../../convex/_generated/api";
-import { Loader2, Droplets } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 // Scent family to gradient and accent color mapping
-const scentFamilyStyles: Record<string, { gradient: string; accent: string; iconBg: string }> = {
-  woody: { gradient: "from-amber-50 to-orange-50", accent: "bg-amber-100 text-amber-700", iconBg: "bg-amber-100" },
-  fresh: { gradient: "from-emerald-50 to-teal-50", accent: "bg-emerald-100 text-emerald-700", iconBg: "bg-emerald-100" },
-  floral: { gradient: "from-rose-50 to-pink-50", accent: "bg-rose-100 text-rose-700", iconBg: "bg-rose-100" },
-  amber: { gradient: "from-orange-50 to-amber-50", accent: "bg-orange-100 text-orange-700", iconBg: "bg-orange-100" },
-  oriental: { gradient: "from-amber-50 to-red-50", accent: "bg-red-100 text-red-700", iconBg: "bg-red-100" },
-  citrus: { gradient: "from-yellow-50 to-amber-50", accent: "bg-yellow-100 text-yellow-700", iconBg: "bg-yellow-100" },
-  aquatic: { gradient: "from-cyan-50 to-blue-50", accent: "bg-cyan-100 text-cyan-700", iconBg: "bg-cyan-100" },
-  gourmand: { gradient: "from-orange-50 to-amber-50", accent: "bg-orange-100 text-orange-700", iconBg: "bg-orange-100" },
-  green: { gradient: "from-lime-50 to-emerald-50", accent: "bg-lime-100 text-lime-700", iconBg: "bg-lime-100" },
-  powdery: { gradient: "from-violet-50 to-pink-50", accent: "bg-violet-100 text-violet-700", iconBg: "bg-violet-100" },
-  musky: { gradient: "from-stone-100 to-neutral-50", accent: "bg-stone-200 text-stone-700", iconBg: "bg-stone-200" },
+const scentFamilyStyles: Record<string, { gradient: string; accent: string; iconBg: string; iconGradient: string; emoji: string }> = {
+  woody: { gradient: "from-amber-50 to-orange-50", accent: "bg-amber-100 text-amber-700", iconBg: "bg-amber-100", iconGradient: "from-amber-200 to-orange-200", emoji: "🪵" },
+  fresh: { gradient: "from-emerald-50 to-teal-50", accent: "bg-emerald-100 text-emerald-700", iconBg: "bg-emerald-100", iconGradient: "from-emerald-200 to-teal-200", emoji: "🍃" },
+  floral: { gradient: "from-rose-50 to-pink-50", accent: "bg-rose-100 text-rose-700", iconBg: "bg-rose-100", iconGradient: "from-rose-200 to-pink-200", emoji: "🌸" },
+  amber: { gradient: "from-orange-50 to-amber-50", accent: "bg-orange-100 text-orange-700", iconBg: "bg-orange-100", iconGradient: "from-orange-200 to-amber-200", emoji: "✨" },
+  oriental: { gradient: "from-amber-50 to-red-50", accent: "bg-red-100 text-red-700", iconBg: "bg-red-100", iconGradient: "from-amber-200 to-red-200", emoji: "🔮" },
+  citrus: { gradient: "from-yellow-50 to-amber-50", accent: "bg-yellow-100 text-yellow-700", iconBg: "bg-yellow-100", iconGradient: "from-yellow-200 to-amber-200", emoji: "🍋" },
+  aquatic: { gradient: "from-cyan-50 to-blue-50", accent: "bg-cyan-100 text-cyan-700", iconBg: "bg-cyan-100", iconGradient: "from-cyan-200 to-blue-200", emoji: "🌊" },
+  gourmand: { gradient: "from-orange-50 to-amber-50", accent: "bg-orange-100 text-orange-700", iconBg: "bg-orange-100", iconGradient: "from-orange-200 to-amber-200", emoji: "🍯" },
+  green: { gradient: "from-lime-50 to-emerald-50", accent: "bg-lime-100 text-lime-700", iconBg: "bg-lime-100", iconGradient: "from-lime-200 to-emerald-200", emoji: "🌿" },
+  powdery: { gradient: "from-violet-50 to-pink-50", accent: "bg-violet-100 text-violet-700", iconBg: "bg-violet-100", iconGradient: "from-violet-200 to-pink-200", emoji: "☁️" },
+  musky: { gradient: "from-stone-100 to-neutral-50", accent: "bg-stone-200 text-stone-700", iconBg: "bg-stone-200", iconGradient: "from-stone-300 to-neutral-200", emoji: "🌙" },
 };
 
-const defaultStyle = { gradient: "from-stone-50 to-amber-50", accent: "bg-stone-100 text-stone-600", iconBg: "bg-stone-100" };
+const defaultStyle = { gradient: "from-stone-50 to-amber-50", accent: "bg-stone-100 text-stone-600", iconBg: "bg-stone-100", iconGradient: "from-stone-200 to-amber-200", emoji: "✨" };
+
+// Image component with loading state and error fallback
+function FragranceImage({
+  src,
+  alt,
+  styles
+}: {
+  src?: string;
+  alt: string;
+  styles: typeof defaultStyle;
+}) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  if (!src || hasError) {
+    // Placeholder with scent family styling
+    return (
+      <div className={`aspect-square rounded-xl flex items-center justify-center bg-gradient-to-br ${styles.iconGradient}`}>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-4xl">{styles.emoji}</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="aspect-square rounded-xl overflow-hidden relative bg-stone-100">
+      {isLoading && (
+        <div className={`absolute inset-0 bg-gradient-to-br ${styles.iconGradient} animate-pulse`} />
+      )}
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(max-width: 768px) 50vw, 33vw"
+        className={`object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        onLoad={() => setIsLoading(false)}
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
+}
 
 export default function CollectionPage() {
   const { user, isLoaded: isUserLoaded } = useUser();
@@ -103,12 +147,13 @@ export default function CollectionPage() {
                   transition={{ delay: 0.05 * index }}
                   className={`bg-gradient-to-br ${styles.gradient} rounded-2xl p-4 border border-white/60 shadow-sm hover:shadow-md transition-shadow cursor-pointer`}
                 >
-                  {/* Decorative icon area */}
-                  <div className="aspect-square rounded-xl mb-3 flex items-center justify-center relative overflow-hidden">
-                    <div className={`absolute inset-0 ${styles.iconBg} opacity-50`} />
-                    <div className={`relative w-16 h-16 ${styles.iconBg} rounded-full flex items-center justify-center`}>
-                      <Droplets className="w-8 h-8 text-stone-400" />
-                    </div>
+                  {/* Fragrance image or placeholder */}
+                  <div className="mb-3">
+                    <FragranceImage
+                      src={item.perfume?.imageUrl}
+                      alt={item.perfume?.name || "Fragrance"}
+                      styles={styles}
+                    />
                   </div>
 
                   {/* Name */}
