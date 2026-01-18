@@ -316,8 +316,8 @@ export default function AddFragrancePage() {
         </div>
       </motion.div>
 
-      {/* Fixed bottom save button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-stone-50 via-stone-50 to-transparent">
+      {/* Fixed bottom save button - positioned above bottom navigation */}
+      <div className="fixed bottom-20 left-0 right-0 px-6 pb-4">
         {saveError && (
           <p className="font-inter text-sm text-red-500 text-center mb-3">
             {saveError}
@@ -328,19 +328,19 @@ export default function AddFragrancePage() {
           whileTap={{ scale: canSave && !isSaving ? 0.98 : 1 }}
           onClick={handleSave}
           disabled={!canSave || isSaving}
-          className={`w-full font-inter px-6 py-4 rounded-full transition-colors flex items-center justify-center gap-2 ${
+          className={`w-full font-inter py-3 rounded-full font-medium transition-colors flex items-center justify-center gap-2 ${
             canSave && !isSaving
-              ? "bg-stone-800 text-white hover:bg-stone-900"
-              : "bg-stone-300 text-stone-500 cursor-not-allowed"
+              ? "bg-amber-500 text-white hover:bg-amber-600"
+              : "bg-stone-200 text-stone-400 cursor-not-allowed"
           }`}
         >
           {isSaving ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Saving...
+              Adding...
             </>
           ) : (
-            "Save to Vault"
+            "Add to Vault"
           )}
         </motion.button>
       </div>
