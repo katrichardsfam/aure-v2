@@ -3,31 +3,75 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { motion } from "framer-motion";
-import { Sparkles, Plus } from "lucide-react";
+import { Sparkles, Plus, Droplets } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import { useState } from "react";
 
-// Scent family to gradient mapping
-const scentFamilyColors: Record<string, string> = {
-  woody: "from-amber-50 to-orange-50",
-  fresh: "from-emerald-50 to-teal-50",
-  floral: "from-rose-50 to-pink-50",
-  amber: "from-orange-50 to-amber-50",
-  oriental: "from-amber-50 to-red-50",
-  citrus: "from-yellow-50 to-amber-50",
-  aquatic: "from-cyan-50 to-blue-50",
-  gourmand: "from-orange-50 to-amber-50",
-  green: "from-lime-50 to-emerald-50",
-  powdery: "from-violet-50 to-pink-50",
-  musky: "from-stone-100 to-neutral-50",
+// Scent family to gradient and placeholder mapping
+const scentFamilyStyles: Record<string, { gradient: string; placeholderBg: string; accent: string }> = {
+  woody: { gradient: "from-amber-50 to-orange-50", placeholderBg: "from-amber-100 to-orange-100", accent: "text-amber-700" },
+  fresh: { gradient: "from-emerald-50 to-teal-50", placeholderBg: "from-emerald-100 to-teal-100", accent: "text-emerald-700" },
+  floral: { gradient: "from-rose-50 to-pink-50", placeholderBg: "from-rose-100 to-pink-100", accent: "text-rose-700" },
+  amber: { gradient: "from-orange-50 to-amber-50", placeholderBg: "from-orange-100 to-amber-100", accent: "text-orange-700" },
+  oriental: { gradient: "from-amber-50 to-red-50", placeholderBg: "from-amber-100 to-red-100", accent: "text-red-700" },
+  citrus: { gradient: "from-yellow-50 to-amber-50", placeholderBg: "from-yellow-100 to-amber-100", accent: "text-yellow-700" },
+  aquatic: { gradient: "from-cyan-50 to-blue-50", placeholderBg: "from-cyan-100 to-blue-100", accent: "text-cyan-700" },
+  gourmand: { gradient: "from-orange-50 to-amber-50", placeholderBg: "from-orange-100 to-amber-100", accent: "text-orange-700" },
+  green: { gradient: "from-lime-50 to-emerald-50", placeholderBg: "from-lime-100 to-emerald-100", accent: "text-lime-700" },
+  powdery: { gradient: "from-violet-50 to-pink-50", placeholderBg: "from-violet-100 to-pink-100", accent: "text-violet-700" },
+  musky: { gradient: "from-stone-100 to-neutral-100", placeholderBg: "from-stone-200 to-neutral-200", accent: "text-stone-600" },
 };
+
+const defaultStyle = { gradient: "from-stone-50 to-amber-50", placeholderBg: "from-stone-100 to-amber-100", accent: "text-stone-600" };
+
+// Image component with loading state and fallback
+function VibeImage({
+  src,
+  alt,
+  styles
+}: {
+  src?: string;
+  alt: string;
+  styles: typeof defaultStyle;
+}) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  if (!src || hasError) {
+    return (
+      <div className={`h-full rounded-lg flex items-center justify-center bg-gradient-to-br ${styles.placeholderBg} relative overflow-hidden`}>
+        <Droplets className={`w-8 h-8 ${styles.accent} opacity-40`} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full rounded-lg overflow-hidden relative bg-white/80">
+      {isLoading && (
+        <div className={`absolute inset-0 bg-gradient-to-br ${styles.placeholderBg} animate-pulse`} />
+      )}
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(max-width: 640px) 40vw, (max-width: 1024px) 25vw, 20vw"
+        className={`object-contain p-1 transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        onLoad={() => setIsLoading(false)}
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
+}
 
 export default function VibesPage() {
   const vibes = useQuery(api.vibes.getUserVibes);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-50 to-amber-50/30">
+      <div className="max-w-2xl mx-auto">
       {/* Header */}
-      <div className="px-6 pt-12 pb-6">
+      <div className="px-4 md:px-6 pt-12 pb-6">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -49,14 +93,14 @@ export default function VibesPage() {
       </div>
 
       {/* Vibes Grid */}
-      <div className="px-6 pb-24">
+      <div className="px-4 md:px-6 pb-24">
         {vibes === undefined ? (
           // Loading state
-          <div className="grid grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map((i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="aspect-square bg-stone-100 rounded-2xl animate-pulse"
+                className="w-full aspect-square bg-stone-100 rounded-lg animate-pulse"
               />
             ))}
           </div>
@@ -86,48 +130,65 @@ export default function VibesPage() {
             </Link>
           </motion.div>
         ) : (
-          // Vibes grid
+          // Vibes grid - compact square cards
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid grid-cols-2 gap-4"
+            className="grid grid-cols-2 sm:grid-cols-3 gap-4"
           >
             {vibes.map((vibe, index) => {
-              const gradient =
-                scentFamilyColors[vibe.scentFamily?.toLowerCase()] ||
-                scentFamilyColors.woody;
+              const styles =
+                scentFamilyStyles[vibe.scentFamily?.toLowerCase()] || defaultStyle;
 
               return (
                 <motion.div
                   key={vibe._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.03 }}
+                  className="w-full"
                 >
                   <Link href={`/vibes/${vibe._id}`}>
                     <div
-                      className={`aspect-square bg-gradient-to-br ${gradient} rounded-2xl p-4 flex flex-col justify-between border border-white/60 shadow-sm hover:shadow-md transition-shadow`}
+                      className={`bg-gradient-to-br ${styles.gradient} rounded-xl p-3 border border-white/60 shadow-sm hover:shadow-md transition-all aspect-square flex flex-col`}
                     >
-                      <div>
-                        <p className="font-cormorant text-lg text-stone-800 line-clamp-2">
-                          {vibe.name}
-                        </p>
+                      {/* Vibe name */}
+                      <p className="font-cormorant font-medium text-sm text-stone-800 line-clamp-1 mb-2">
+                        {vibe.name}
+                      </p>
+
+                      {/* Perfume image - larger in square card */}
+                      <div className="flex-1 min-h-0">
+                        <VibeImage
+                          src={vibe.imageUrl}
+                          alt={vibe.perfumeName}
+                          styles={styles}
+                        />
                       </div>
-                      <div>
-                        <p className="text-xs text-stone-500 truncate">
-                          {vibe.perfumeName}
-                        </p>
-                        <div className="flex gap-1 mt-2 flex-wrap">
-                          {vibe.auraWords.slice(0, 2).map((word, i) => (
-                            <span
-                              key={i}
-                              className="text-xs px-2 py-0.5 bg-white/60 rounded-full text-stone-600"
-                            >
-                              {word}
-                            </span>
-                          ))}
-                        </div>
+
+                      {/* Perfume name */}
+                      <p className="font-inter text-[11px] text-stone-600 truncate mt-2">
+                        {vibe.perfumeName}
+                      </p>
+
+                      {/* Aura words */}
+                      <div className="flex gap-1 mt-1.5 flex-wrap">
+                        {vibe.auraWords.slice(0, 2).map((word, i) => (
+                          <span
+                            key={i}
+                            className="text-[10px] px-1.5 py-0.5 bg-white/60 rounded-full text-stone-500"
+                          >
+                            {word}
+                          </span>
+                        ))}
                       </div>
+
+                      {/* Occasion badge */}
+                      {vibe.occasion && (
+                        <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 bg-stone-800/10 rounded text-stone-600">
+                          {vibe.occasion}
+                        </span>
+                      )}
                     </div>
                   </Link>
                 </motion.div>
@@ -135,6 +196,7 @@ export default function VibesPage() {
             })}
           </motion.div>
         )}
+      </div>
       </div>
     </div>
   );

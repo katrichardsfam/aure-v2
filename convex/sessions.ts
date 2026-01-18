@@ -296,22 +296,38 @@ export const createWithRecommendation = mutation({
           console.log("  Favorite bonus! +5");
         }
 
-        // Slight penalty if worn recently
+        // Stronger penalty if worn recently
         if (up.lastWornAt) {
           const daysSinceWorn = (Date.now() - up.lastWornAt) / (1000 * 60 * 60 * 24);
-          if (daysSinceWorn < 2) {
+          if (daysSinceWorn < 1) {
+            // Worn today - heavy penalty
+            score -= 50;
+            scoreBreakdown.recentlyWorn = -50;
+            console.log("  Worn today penalty! -50");
+          } else if (daysSinceWorn < 3) {
+            score -= 25;
+            scoreBreakdown.recentlyWorn = -25;
+            console.log("  Worn in last 3 days penalty! -25");
+          } else if (daysSinceWorn < 7) {
             score -= 10;
             scoreBreakdown.recentlyWorn = -10;
-            console.log("  Recently worn penalty! -10");
-          } else if (daysSinceWorn < 7) {
-            score -= 5;
-            scoreBreakdown.recentlyWorn = -5;
-            console.log("  Worn this week penalty! -5");
+            console.log("  Worn this week penalty! -10");
           }
+        } else {
+          // Bonus for never-worn perfumes to encourage variety
+          score += 5;
+          scoreBreakdown.neverWorn = 5;
+          console.log("  Never worn bonus! +5");
         }
 
+        // Add small random factor (0-3) to break ties and add variety
+        const randomFactor = Math.random() * 3;
+        score += randomFactor;
+        scoreBreakdown.random = randomFactor;
+        console.log(`  Random factor: +${randomFactor.toFixed(2)}`);
+
         const finalScore = Math.max(0, score);
-        console.log(`  TOTAL SCORE: ${finalScore}`);
+        console.log(`  TOTAL SCORE: ${finalScore.toFixed(2)}`);
         console.log("  Score breakdown:", scoreBreakdown);
 
         return {
@@ -322,7 +338,7 @@ export const createWithRecommendation = mutation({
       })
     );
 
-    // Filter out nulls and sort by score
+    // Filter out nulls and sort by score (highest first)
     const validPerfumes = scoredPerfumes
       .filter((p): p is NonNullable<typeof p> => p !== null)
       .sort((a, b) => b.score - a.score);

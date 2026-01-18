@@ -18,6 +18,7 @@ interface SaveVibeModalProps {
   auraWords: string[];
   mood: string;
   occasion: string;
+  onSaveSuccess?: () => void; // Optional callback for when save succeeds (instead of navigating)
 }
 
 // Scent family to gradient mapping (matches recommendation screen)
@@ -45,6 +46,7 @@ export default function SaveVibeModal({
   auraWords,
   mood,
   occasion,
+  onSaveSuccess,
 }: SaveVibeModalProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,11 +54,13 @@ export default function SaveVibeModal({
   const [vibeName, setVibeName] = useState("");
   const [notes, setNotes] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Get the mutation
+  // Get the mutations
   const saveVibe = useMutation(api.vibes.saveVibe);
+  const generateUploadUrl = useMutation(api.storage.generateUploadUrl);
 
   const colors =
     scentFamilyColors[scentFamily?.toLowerCase()] || scentFamilyColors.woody;
@@ -64,6 +68,8 @@ export default function SaveVibeModal({
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Store the file for upload
+      setSelectedFile(file);
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -84,11 +90,33 @@ export default function SaveVibeModal({
     setIsSaving(true);
 
     try {
+      // Upload image if one was selected
+      let outfitImageId: Id<"_storage"> | undefined;
+      if (selectedFile) {
+        // Get upload URL from Convex
+        const uploadUrl = await generateUploadUrl();
+
+        // Upload the file
+        const response = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": selectedFile.type },
+          body: selectedFile,
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to upload image");
+        }
+
+        const { storageId } = await response.json();
+        outfitImageId = storageId;
+      }
+
       await saveVibe({
         sessionId,
         name: vibeName.trim(),
         notes: notes.trim() || undefined,
         hasImage: !!imagePreview,
+        outfitImageId,
         perfumeName,
         perfumeHouse,
         scentFamily,
@@ -97,9 +125,15 @@ export default function SaveVibeModal({
         occasion,
       });
 
-      // Success - close modal and navigate
+      // Success - close modal
       onClose();
-      router.push("/vibes");
+
+      // If callback provided, call it; otherwise navigate
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      } else {
+        router.push("/vibes");
+      }
     } catch (err: unknown) {
       console.error("Failed to save vibe:", err);
       const message = err instanceof Error ? err.message : "Something went wrong";
@@ -120,6 +154,7 @@ export default function SaveVibeModal({
     setVibeName("");
     setNotes("");
     setImagePreview(null);
+    setSelectedFile(null);
     setError("");
     onClose();
   };
@@ -254,6 +289,7 @@ export default function SaveVibeModal({
                       <button
                         onClick={() => {
                           setImagePreview(null);
+                          setSelectedFile(null);
                           if (fileInputRef.current) {
                             fileInputRef.current.value = "";
                           }

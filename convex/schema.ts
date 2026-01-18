@@ -141,6 +141,7 @@ export default defineSchema({
     name: v.string(),
     notes: v.optional(v.string()),
     hasImage: v.boolean(),
+    outfitImageId: v.optional(v.id("_storage")), // Convex storage ID for outfit photo
     // Denormalized data for fast display
     perfumeName: v.string(),
     perfumeHouse: v.string(),

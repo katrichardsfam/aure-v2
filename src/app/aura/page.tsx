@@ -271,6 +271,8 @@ function AuraContent() {
   const { user, isLoaded: isUserLoaded } = useUser();
   const [isLoggingWorn, setIsLoggingWorn] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isLogged, setIsLogged] = useState(false);
 
   // Get session ID from URL
   const sessionIdParam = searchParams.get("session");
@@ -289,7 +291,7 @@ function AuraContent() {
 
   // Handle "Log as worn" action
   const handleLogAsWorn = async () => {
-    if (!session?.userPerfume?._id || !user?.id || !session?.perfume) return;
+    if (!session?.userPerfume?._id || !user?.id || !session?.perfume || isLogged) return;
 
     setIsLoggingWorn(true);
     try {
@@ -308,9 +310,11 @@ function AuraContent() {
         sessionId: session._id,
       });
 
-      router.push("/log");
+      // Success - show logged state, stay on page
+      setIsLogged(true);
     } catch (error) {
       console.error("Failed to log as worn:", error);
+    } finally {
       setIsLoggingWorn(false);
     }
   };
@@ -382,7 +386,7 @@ function AuraContent() {
     <div className={cn("min-h-screen bg-gradient-to-br", gradient.bg)}>
       <FloatingOrbs scentFamily={scentFamily} />
 
-      <div className="relative z-10 px-6 py-8 pb-32">
+      <div className="relative z-10 px-4 md:px-6 py-8 pb-40 max-w-2xl mx-auto">
         {/* Header */}
         <motion.header
           initial={{ opacity: 0, y: -10 }}
@@ -405,26 +409,28 @@ function AuraContent() {
           animate="visible"
           className="space-y-6"
         >
-          {/* Scent Family Badge */}
-          <motion.div variants={itemVariants} className="flex justify-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/80">
-              <span
-                className={cn(
-                  "w-2 h-2 rounded-full",
-                  scentFamily === "fresh" && "bg-teal-500",
-                  scentFamily === "floral" && "bg-rose-500",
-                  scentFamily === "woody" && "bg-amber-600",
-                  scentFamily === "amber" && "bg-orange-500",
-                  scentFamily === "gourmand" && "bg-amber-500",
-                  scentFamily === "musky" && "bg-stone-500",
-                  !["fresh", "floral", "woody", "amber", "gourmand", "musky"].includes(scentFamily) && "bg-stone-400"
-                )}
-              />
-              <span className={cn("text-sm font-medium capitalize", gradient.accent)}>
-                {scentFamily}
-              </span>
-            </div>
-          </motion.div>
+          {/* Scent Family Badge - only show if we have a real scent family */}
+          {scentFamily && scentFamily !== "default" && (
+            <motion.div variants={itemVariants} className="flex justify-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/80">
+                <span
+                  className={cn(
+                    "w-2 h-2 rounded-full",
+                    scentFamily === "fresh" && "bg-teal-500",
+                    scentFamily === "floral" && "bg-rose-500",
+                    scentFamily === "woody" && "bg-amber-600",
+                    scentFamily === "amber" && "bg-orange-500",
+                    scentFamily === "gourmand" && "bg-amber-500",
+                    scentFamily === "musky" && "bg-stone-500",
+                    !["fresh", "floral", "woody", "amber", "gourmand", "musky"].includes(scentFamily) && "bg-stone-400"
+                  )}
+                />
+                <span className={cn("text-sm font-medium capitalize", gradient.accent)}>
+                  {scentFamily}
+                </span>
+              </div>
+            </motion.div>
+          )}
 
           {/* Perfume Name & House */}
           <motion.div variants={itemVariants} className="text-center py-2">
@@ -497,28 +503,46 @@ function AuraContent() {
             </motion.div>
           )}
 
-          {/* Action Buttons */}
-          <motion.div variants={itemVariants} className="pt-6 space-y-3">
+          {/* Action Buttons - contained width */}
+          <motion.div variants={itemVariants} className="pt-6 space-y-3 max-w-md mx-auto">
             {/* Primary CTA - Save this vibe */}
             <button
               onClick={handleSaveVibe}
-              className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-full font-inter font-medium text-base hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg active:scale-[0.98]"
+              disabled={isSaved}
+              className={cn(
+                "w-full py-4 rounded-full font-inter font-medium text-base transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2",
+                isSaved
+                  ? "bg-emerald-500 text-white cursor-default"
+                  : "bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700"
+              )}
             >
-              Save this vibe
+              {isSaved ? (
+                <>
+                  <Check className="w-5 h-5" />
+                  Saved
+                </>
+              ) : (
+                "Save this vibe"
+              )}
             </button>
 
-            {/* Secondary CTA - Log as worn */}
+            {/* Secondary CTA - Log as worn (works independently) */}
             <button
               onClick={handleLogAsWorn}
-              disabled={isLoggingWorn}
-              className="w-full py-3 bg-white/80 backdrop-blur-sm text-stone-700 rounded-full font-inter text-sm font-medium hover:bg-white transition-colors border border-stone-300 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98]"
+              disabled={isLoggingWorn || isLogged}
+              className={cn(
+                "w-full py-3 rounded-full font-inter text-sm font-medium transition-colors border flex items-center justify-center gap-2 active:scale-[0.98]",
+                isLogged
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-700 cursor-default"
+                  : "bg-white/80 backdrop-blur-sm text-stone-700 border-stone-300 hover:bg-white disabled:opacity-50"
+              )}
             >
               {isLoggingWorn ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
               ) : (
                 <Check className="w-4 h-4" />
               )}
-              Log as worn
+              {isLogged ? "Logged" : "Log as worn"}
             </button>
 
             {/* Tertiary - New ritual link */}
@@ -543,6 +567,7 @@ function AuraContent() {
         auraWords={auraWords}
         mood={mood || ""}
         occasion={session.occasion || ""}
+        onSaveSuccess={() => setIsSaved(true)}
       />
     </div>
   );

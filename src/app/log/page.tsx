@@ -144,7 +144,7 @@ export default function ScentJournalPage() {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 px-6 pt-12 pb-6">
+      <header className="relative z-10 px-4 md:px-6 pt-12 pb-6 max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -169,7 +169,7 @@ export default function ScentJournalPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="relative z-10 flex flex-col items-center justify-center py-24 px-6 text-center"
+          className="relative z-10 flex flex-col items-center justify-center py-24 px-4 md:px-6 text-center max-w-2xl mx-auto"
         >
           <div className="w-20 h-20 bg-white/60 backdrop-blur rounded-full flex items-center justify-center mb-6 shadow-sm border border-white/80">
             <Droplets className="w-10 h-10 text-amber-500" />
@@ -195,7 +195,7 @@ export default function ScentJournalPage() {
       {/* Wear history feed */}
       {wearHistory.length > 0 && (
         <motion.div
-          className="relative z-10 px-6 pb-32"
+          className="relative z-10 px-4 md:px-6 pb-32 max-w-2xl mx-auto"
           variants={containerVariants}
           initial="hidden"
           animate="visible"

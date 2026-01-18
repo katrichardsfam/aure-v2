@@ -2,6 +2,28 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 
+// Get a single user perfume by ID
+export const getById = query({
+  args: { userPerfumeId: v.id("userPerfumes") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const userPerfume = await ctx.db.get(args.userPerfumeId);
+    if (!userPerfume || userPerfume.userId !== identity.subject) {
+      return null;
+    }
+
+    // Fetch full perfume details
+    const perfume = await ctx.db.get(userPerfume.perfumeId);
+
+    return {
+      ...userPerfume,
+      perfume,
+    };
+  },
+});
+
 // Get user's perfume collection
 export const getCollection = query({
   args: { userId: v.string() },

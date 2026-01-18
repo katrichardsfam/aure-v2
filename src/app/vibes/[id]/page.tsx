@@ -6,7 +6,9 @@ import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Sparkles, Calendar } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, Sparkles, Calendar, ChevronLeft, ChevronRight, Droplets, Camera } from "lucide-react";
+import { useState } from "react";
 
 const AURA_GRADIENTS: Record<string, string> = {
   fresh: "from-lime-50 via-emerald-50 to-cyan-50",
@@ -35,6 +37,51 @@ const itemVariants = {
   },
 };
 
+// Scent family emoji mapping for fallback
+const SCENT_EMOJI: Record<string, string> = {
+  floral: "🌸",
+  fresh: "🍃",
+  woody: "🪵",
+  amber: "✨",
+  gourmand: "🍫",
+  musky: "🌙",
+};
+
+// Perfume image component with loading state
+function PerfumeImage({ src, alt, scentFamily }: { src?: string; alt: string; scentFamily?: string }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  if (!src || hasError) {
+    // Fallback to emoji
+    const emoji = SCENT_EMOJI[scentFamily?.toLowerCase() || ""] || "✨";
+    return (
+      <div className="w-20 h-20 bg-gradient-to-br from-stone-100 to-stone-200 rounded-xl flex items-center justify-center">
+        <span className="text-3xl">{emoji}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-20 h-20 rounded-xl overflow-hidden relative bg-white shadow-sm">
+      {isLoading && (
+        <div className="absolute inset-0 bg-gradient-to-br from-stone-100 to-stone-200 animate-pulse flex items-center justify-center">
+          <Droplets className="w-6 h-6 text-stone-300" />
+        </div>
+      )}
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="80px"
+        className={`object-contain p-1 transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        onLoad={() => setIsLoading(false)}
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
+}
+
 export default function VibeDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -43,6 +90,14 @@ export default function VibeDetailPage() {
   const vibe = useQuery(api.vibes.getVibe, {
     vibeId: vibeId as Id<"vibes">,
   });
+
+  const allVibeIds = useQuery(api.vibes.getUserVibeIds);
+
+  // Calculate previous/next navigation
+  const currentIndex = allVibeIds?.findIndex((id) => id === vibeId) ?? -1;
+  const totalVibes = allVibeIds?.length ?? 0;
+  const prevVibeId = currentIndex > 0 ? allVibeIds?.[currentIndex - 1] : null;
+  const nextVibeId = currentIndex < totalVibes - 1 ? allVibeIds?.[currentIndex + 1] : null;
 
   // Loading state
   if (vibe === undefined) {
@@ -95,7 +150,7 @@ export default function VibeDetailPage() {
       </div>
 
       {/* Header with back navigation */}
-      <header className="relative z-10 px-6 pt-12 pb-4">
+      <header className="relative z-10 px-4 md:px-6 pt-12 pb-4 max-w-2xl mx-auto">
         <Link
           href="/vibes"
           className="inline-flex items-center gap-2 font-inter text-sm text-stone-600 hover:text-stone-800 transition-colors"
@@ -107,7 +162,7 @@ export default function VibeDetailPage() {
 
       {/* Main content */}
       <motion.main
-        className="relative z-10 px-6 pt-4 pb-32"
+        className="relative z-10 px-4 md:px-6 pt-4 pb-44 max-w-2xl mx-auto"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -128,7 +183,7 @@ export default function VibeDetailPage() {
         {/* Visual board - glass card */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 mb-6 border border-white/50 shadow-lg"
+          className="bg-white/70 rounded-3xl p-6 mb-6 border border-white/50 shadow-lg"
         >
           {/* Perfume display */}
           <div className="space-y-4">
@@ -141,24 +196,12 @@ export default function VibeDetailPage() {
 
             {/* Main perfume card */}
             <div className="flex items-center gap-4 bg-white/60 rounded-2xl p-4">
-              {/* Perfume visual */}
-              <div className="w-16 h-16 bg-gradient-to-br from-stone-100 to-stone-200 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">
-                  {vibe.scentFamily === "floral"
-                    ? "\u{1F338}"
-                    : vibe.scentFamily === "fresh"
-                      ? "\u{1F343}"
-                      : vibe.scentFamily === "woody"
-                        ? "\u{1FAB5}"
-                        : vibe.scentFamily === "amber"
-                          ? "\u{2728}"
-                          : vibe.scentFamily === "gourmand"
-                            ? "\u{1F36B}"
-                            : vibe.scentFamily === "musky"
-                              ? "\u{1F311}"
-                              : "\u{2728}"}
-                </span>
-              </div>
+              {/* Perfume image */}
+              <PerfumeImage
+                src={vibe.imageUrl}
+                alt={vibe.perfumeName}
+                scentFamily={vibe.scentFamily}
+              />
               <div className="flex-1">
                 <p className="font-cormorant text-xl text-stone-800">
                   {vibe.perfumeName}
@@ -166,7 +209,7 @@ export default function VibeDetailPage() {
                 <p className="font-inter text-sm text-stone-500">
                   {vibe.perfumeHouse}
                 </p>
-                {vibe.scentFamily && (
+                {vibe.scentFamily && vibe.scentFamily.toLowerCase() !== "default" && (
                   <span className="inline-block mt-2 px-3 py-1 bg-white/60 rounded-full text-xs font-inter text-stone-600 capitalize">
                     {vibe.scentFamily}
                   </span>
@@ -195,11 +238,47 @@ export default function VibeDetailPage() {
           </div>
         </motion.div>
 
+        {/* Outfit image - shows when user saved an outfit photo */}
+        {(vibe.outfitImageUrl || vibe.hasImage) && (
+          <motion.div
+            variants={itemVariants}
+            className="bg-white/60 rounded-2xl p-5 mb-6 border border-white/40"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Camera className="w-4 h-4 text-amber-600" />
+              <span className="font-inter text-sm text-stone-500 uppercase tracking-wide">
+                Your Outfit
+              </span>
+            </div>
+            {vibe.outfitImageUrl ? (
+              <div className="relative aspect-[4/3] w-full rounded-xl overflow-hidden bg-stone-100">
+                <Image
+                  src={vibe.outfitImageUrl}
+                  alt="Outfit"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 672px"
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl">
+                <div className="w-10 h-10 bg-stone-100 rounded-lg flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-stone-400" />
+                </div>
+                <div>
+                  <p className="font-inter text-sm text-stone-500">Photo saved with this vibe</p>
+                  <p className="font-inter text-xs text-stone-400">Image unavailable</p>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+
         {/* Notes section */}
         {vibe.notes && (
           <motion.div
             variants={itemVariants}
-            className="bg-white/30 backdrop-blur-sm rounded-2xl p-5 mb-6 border border-white/40"
+            className="bg-white/60 rounded-2xl p-5 mb-6 border border-white/40"
           >
             <p className="font-inter text-sm text-stone-500 mb-2">Your notes</p>
             <p className="font-inter text-stone-700 italic leading-relaxed">
@@ -216,12 +295,12 @@ export default function VibeDetailPage() {
             </p>
             <div className="flex flex-wrap gap-2">
               {vibe.mood && (
-                <span className="px-4 py-2 bg-white/40 backdrop-blur rounded-full font-inter text-sm text-stone-600 capitalize">
+                <span className="px-4 py-2 bg-white/70 rounded-full font-inter text-sm text-stone-600 capitalize">
                   {vibe.mood}
                 </span>
               )}
               {vibe.occasion && (
-                <span className="px-4 py-2 bg-white/40 backdrop-blur rounded-full font-inter text-sm text-stone-600 capitalize">
+                <span className="px-4 py-2 bg-white/70 rounded-full font-inter text-sm text-stone-600 capitalize">
                   {vibe.occasion}
                 </span>
               )}
@@ -230,19 +309,59 @@ export default function VibeDetailPage() {
         )}
       </motion.main>
 
-      {/* Fixed CTA at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white/80 to-transparent backdrop-blur-sm">
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleStyleAgain}
-          className="w-full bg-stone-800 text-white font-inter px-6 py-4 rounded-full shadow-lg hover:bg-stone-900 transition-colors"
-        >
-          Style this vibe again
-        </motion.button>
+      {/* Fixed CTA at bottom - elevated above nav */}
+      <div className="fixed bottom-24 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-white via-white/95 to-transparent z-40">
+        <div className="max-w-2xl mx-auto">
+          {/* Previous/Next Navigation */}
+          {totalVibes > 1 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-center justify-between mb-4"
+            >
+              {prevVibeId ? (
+                <Link
+                  href={`/vibes/${prevVibeId}`}
+                  className="flex items-center gap-1 text-stone-600 hover:text-stone-800 transition-colors font-inter text-sm"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </Link>
+              ) : (
+                <span className="w-20" />
+              )}
+
+              <span className="font-inter text-xs text-stone-400">
+                {currentIndex + 1} / {totalVibes}
+              </span>
+
+              {nextVibeId ? (
+                <Link
+                  href={`/vibes/${nextVibeId}`}
+                  className="flex items-center gap-1 text-stone-600 hover:text-stone-800 transition-colors font-inter text-sm"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <span className="w-20" />
+              )}
+            </motion.div>
+          )}
+
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleStyleAgain}
+            className="w-full bg-stone-800 text-white font-inter px-6 py-4 rounded-full shadow-lg hover:bg-stone-900 transition-colors"
+          >
+            Style this vibe again
+          </motion.button>
+        </div>
       </div>
     </div>
   );

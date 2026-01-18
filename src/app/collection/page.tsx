@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useQuery, useMutation } from "convex/react";
 import { useUser } from "@clerk/nextjs";
 import { api } from "../../../convex/_generated/api";
-import { Loader2, X, Droplets } from "lucide-react";
+import { Loader2, X, Droplets, Plus } from "lucide-react";
 import { useState } from "react";
 import { Id } from "../../../convex/_generated/dataModel";
 
@@ -179,8 +179,9 @@ export default function CollectionPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-50 to-amber-50/30">
+      <div className="max-w-2xl mx-auto">
       {/* Header */}
-      <header className="px-4 pt-12 pb-6">
+      <header className="px-4 md:px-6 pt-12 pb-6">
         <Link
           href="/"
           className="font-inter text-sm text-stone-500 mb-3 block hover:text-stone-700 transition-colors"
@@ -188,18 +189,26 @@ export default function CollectionPage() {
           ← Home
         </Link>
         <div className="flex items-center justify-between">
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="font-cormorant font-light text-2xl text-stone-900"
+          <div>
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="font-cormorant font-light text-2xl text-stone-900"
+            >
+              Your Vault
+            </motion.h1>
+            {!isLoading && !isEmpty && (
+              <span className="font-inter text-xs text-stone-400">
+                {validCollection.length} fragrance{validCollection.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+          <Link
+            href="/collection/add"
+            className="p-3 bg-stone-800 text-white rounded-full shadow-lg hover:bg-stone-700 transition-colors"
           >
-            Your Vault
-          </motion.h1>
-          {!isLoading && !isEmpty && (
-            <span className="font-inter text-xs text-stone-400">
-              {validCollection.length} fragrance{validCollection.length !== 1 ? "s" : ""}
-            </span>
-          )}
+            <Plus className="w-5 h-5" />
+          </Link>
         </div>
       </header>
 
@@ -234,12 +243,12 @@ export default function CollectionPage() {
         </motion.div>
       ) : (
         /* Collection Grid */
-        <div className="px-3 pb-28">
+        <div className="px-4 md:px-6 pb-28">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2"
+            className="grid grid-cols-3 sm:grid-cols-4 gap-3"
           >
             <AnimatePresence mode="popLayout">
               {validCollection.map((item, index) => {
@@ -254,7 +263,7 @@ export default function CollectionPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ delay: 0.02 * Math.min(index, 12) }}
-                    className={`bg-gradient-to-br ${styles.gradient} rounded-lg p-2 border border-white/60 shadow-sm hover:shadow transition-all group relative`}
+                    className="relative group"
                   >
                     {/* Delete button */}
                     <button
@@ -264,26 +273,30 @@ export default function CollectionPage() {
                       <X className="w-3 h-3 text-stone-400 hover:text-red-500" />
                     </button>
 
-                    {/* Fragrance image or placeholder */}
-                    <FragranceImage
-                      src={item.perfume?.imageUrl}
-                      alt={item.perfume?.name || "Fragrance"}
-                      name={item.perfume?.name}
-                      styles={styles}
-                    />
+                    <Link href={`/collection/${item._id}`}>
+                      <div className={`bg-gradient-to-br ${styles.gradient} rounded-lg p-2 border border-white/60 shadow-sm hover:shadow-md transition-all cursor-pointer`}>
+                        {/* Fragrance image or placeholder */}
+                        <FragranceImage
+                          src={item.perfume?.imageUrl}
+                          alt={item.perfume?.name || "Fragrance"}
+                          name={item.perfume?.name}
+                          styles={styles}
+                        />
 
-                    {/* Info section */}
-                    <div className="mt-1.5">
-                      {/* Name */}
-                      <h3 className="font-cormorant font-medium text-xs text-stone-800 leading-tight line-clamp-2">
-                        {item.perfume?.name}
-                      </h3>
+                        {/* Info section */}
+                        <div className="mt-1.5">
+                          {/* Name */}
+                          <h3 className="font-cormorant font-medium text-xs text-stone-800 leading-tight line-clamp-2">
+                            {item.perfume?.name}
+                          </h3>
 
-                      {/* House */}
-                      <p className="font-inter text-[10px] text-stone-500 truncate">
-                        {item.perfume?.house}
-                      </p>
-                    </div>
+                          {/* House */}
+                          <p className="font-inter text-[10px] text-stone-500 truncate">
+                            {item.perfume?.house}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
                   </motion.div>
                 );
               })}
@@ -291,21 +304,7 @@ export default function CollectionPage() {
           </motion.div>
         </div>
       )}
-
-      {/* Fixed bottom CTA - only show when collection has items */}
-      {!isLoading && !isEmpty && (
-        <div className="fixed bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-stone-50 via-stone-50/95 to-transparent">
-          <Link href="/collection/add">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full bg-stone-800 text-white font-inter px-5 py-3 rounded-full hover:bg-stone-900 transition-colors text-sm"
-            >
-              + Add fragrance
-            </motion.button>
-          </Link>
-        </div>
-      )}
+      </div>
 
       {/* Delete confirmation modal */}
       <AnimatePresence>

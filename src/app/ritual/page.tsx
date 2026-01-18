@@ -85,7 +85,7 @@ export default function RitualPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-white to-stone-100">
       {/* Progress indicator */}
-      <div className="px-6 pt-6 flex items-center justify-between">
+      <div className="px-4 md:px-6 pt-6 flex items-center justify-between max-w-2xl mx-auto">
         <div className="flex-1 h-1 bg-stone-200 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-stone-800"
@@ -102,7 +102,7 @@ export default function RitualPage() {
         </Link>
       </div>
 
-      <div className="px-6 pt-12 pb-32">
+      <div className="px-4 md:px-6 pt-12 pb-32 max-w-2xl mx-auto">
         <motion.h1
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

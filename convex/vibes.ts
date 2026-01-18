@@ -7,6 +7,7 @@ export const saveVibe = mutation({
     name: v.string(),
     notes: v.optional(v.string()),
     hasImage: v.boolean(),
+    outfitImageId: v.optional(v.id("_storage")),
     perfumeName: v.string(),
     perfumeHouse: v.string(),
     scentFamily: v.string(),
@@ -26,6 +27,7 @@ export const saveVibe = mutation({
       name: args.name,
       notes: args.notes,
       hasImage: args.hasImage,
+      outfitImageId: args.outfitImageId,
       perfumeName: args.perfumeName,
       perfumeHouse: args.perfumeHouse,
       scentFamily: args.scentFamily,
@@ -53,7 +55,29 @@ export const getUserVibes = query({
       .order("desc")
       .collect();
 
-    return vibes;
+    // Fetch perfume images via session -> userPerfume -> perfume chain
+    const vibesWithImages = await Promise.all(
+      vibes.map(async (vibe) => {
+        let imageUrl: string | undefined;
+
+        // Try to get image from session's recommended perfume
+        const session = await ctx.db.get(vibe.sessionId);
+        if (session?.recommendedPerfumeId) {
+          const userPerfume = await ctx.db.get(session.recommendedPerfumeId);
+          if (userPerfume?.perfumeId) {
+            const perfume = await ctx.db.get(userPerfume.perfumeId);
+            imageUrl = perfume?.imageUrl;
+          }
+        }
+
+        return {
+          ...vibe,
+          imageUrl,
+        };
+      })
+    );
+
+    return vibesWithImages;
   },
 });
 
@@ -70,7 +94,46 @@ export const getVibe = query({
       return null;
     }
 
-    return vibe;
+    // Fetch perfume image via session -> userPerfume -> perfume chain
+    let imageUrl: string | undefined;
+    const session = await ctx.db.get(vibe.sessionId);
+    if (session?.recommendedPerfumeId) {
+      const userPerfume = await ctx.db.get(session.recommendedPerfumeId);
+      if (userPerfume?.perfumeId) {
+        const perfume = await ctx.db.get(userPerfume.perfumeId);
+        imageUrl = perfume?.imageUrl;
+      }
+    }
+
+    // Fetch outfit image URL if exists
+    let outfitImageUrl: string | null = null;
+    if (vibe.outfitImageId) {
+      outfitImageUrl = await ctx.storage.getUrl(vibe.outfitImageId);
+    }
+
+    return {
+      ...vibe,
+      imageUrl,
+      outfitImageUrl,
+    };
+  },
+});
+
+export const getUserVibeIds = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const vibes = await ctx.db
+      .query("vibes")
+      .withIndex("by_user_created", (q) => q.eq("userId", identity.subject))
+      .order("desc")
+      .collect();
+
+    return vibes.map((vibe) => vibe._id);
   },
 });
 
