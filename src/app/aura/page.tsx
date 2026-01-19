@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Wordmark } from "@/components/Wordmark";
 import SaveVibeModal from "@/components/SaveVibeModal";
 import { cn } from "@/lib/utils";
+import { getEnhancedPerfumeImage } from "@/lib/imageUtils";
 
 // ============================================
 // SUSPENSE LOADING FALLBACK
@@ -275,6 +276,7 @@ function AuraContent() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isLogged, setIsLogged] = useState(false);
+  const [useImageFallback, setUseImageFallback] = useState(false);
 
   // Get session ID from URL
   const sessionIdParam = searchParams.get("session");
@@ -411,20 +413,6 @@ function AuraContent() {
           animate="visible"
           className="space-y-6"
         >
-          {/* Perfume Image - Hero display */}
-          {perfume.imageUrl && (
-            <motion.div variants={itemVariants} className="flex justify-center">
-              <div className="w-full max-w-xs">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={perfume.imageUrl}
-                  alt={perfume.name}
-                  className="w-full h-56 object-contain mx-auto drop-shadow-lg"
-                />
-              </div>
-            </motion.div>
-          )}
-
           {/* Scent Family Badge - only show if we have a real scent family */}
           {scentFamily && scentFamily !== "default" && (
             <motion.div variants={itemVariants} className="flex justify-center">
@@ -444,6 +432,31 @@ function AuraContent() {
                 <span className={cn("text-sm font-medium capitalize", gradient.accent)}>
                   {scentFamily}
                 </span>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Perfume Image - Hero display with CSS blend for white bg removal */}
+          {perfume.imageUrl && (
+            <motion.div variants={itemVariants} className="flex justify-center py-2">
+              {/* Container with warm gradient that blends with multiply mode */}
+              <div className={cn(
+                "w-full max-w-xs rounded-2xl p-4",
+                "bg-gradient-to-br from-white/40 to-transparent"
+              )}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={useImageFallback ? perfume.imageUrl : getEnhancedPerfumeImage(perfume.imageUrl)}
+                  alt={perfume.name}
+                  className="w-full h-52 object-contain mx-auto mix-blend-multiply"
+                  onError={(e) => {
+                    // If Cloudinary fails, fall back to original URL
+                    if (!useImageFallback) {
+                      setUseImageFallback(true);
+                      (e.target as HTMLImageElement).src = perfume.imageUrl!;
+                    }
+                  }}
+                />
               </div>
             </motion.div>
           )}

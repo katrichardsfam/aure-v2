@@ -18,6 +18,7 @@ import {
   Trash2,
   Loader2,
 } from "lucide-react";
+import { getEnhancedPerfumeImage } from "@/lib/imageUtils";
 
 // Scent family styling
 const scentFamilyStyles: Record<
@@ -39,11 +40,15 @@ const scentFamilyStyles: Record<
 
 const defaultStyle = { gradient: "from-stone-50 to-amber-50", accent: "text-stone-600", emoji: "✨" };
 
-// Perfume image component
+// Perfume image component with Cloudinary fallback
 function PerfumeImage({ src, alt, scentFamily }: { src?: string; alt: string; scentFamily?: string }) {
   const [isLoading, setIsLoading] = useState(true);
+  const [useFallback, setUseFallback] = useState(false);
   const [hasError, setHasError] = useState(false);
   const styles = scentFamilyStyles[scentFamily?.toLowerCase() || ""] || defaultStyle;
+
+  // Get the appropriate image URL (enhanced or original fallback)
+  const imageUrl = useFallback ? (src || '') : getEnhancedPerfumeImage(src || '');
 
   if (!src || hasError) {
     return (
@@ -54,21 +59,33 @@ function PerfumeImage({ src, alt, scentFamily }: { src?: string; alt: string; sc
   }
 
   return (
-    <div className="aspect-square w-full max-w-xs mx-auto rounded-2xl overflow-hidden relative bg-white shadow-sm">
-      {isLoading && (
-        <div className={`absolute inset-0 bg-gradient-to-br ${styles.gradient} animate-pulse flex items-center justify-center`}>
-          <Droplets className="w-12 h-12 text-stone-300" />
-        </div>
-      )}
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes="320px"
-        className={`object-contain p-4 transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
-        onLoad={() => setIsLoading(false)}
-        onError={() => setHasError(true)}
-      />
+    // Outer container with scent family gradient as frame
+    <div className={`w-full max-w-sm mx-auto rounded-3xl p-3 bg-gradient-to-br ${styles.gradient} shadow-sm`}>
+      {/* Inner white container for the image */}
+      <div className="aspect-square w-full rounded-2xl overflow-hidden relative bg-white/90 backdrop-blur-sm">
+        {isLoading && (
+          <div className={`absolute inset-0 bg-gradient-to-br ${styles.gradient} animate-pulse flex items-center justify-center`}>
+            <Droplets className="w-12 h-12 text-stone-300" />
+          </div>
+        )}
+        <Image
+          src={imageUrl}
+          alt={alt}
+          fill
+          sizes="384px"
+          className={`object-contain p-4 transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
+          onLoad={() => setIsLoading(false)}
+          onError={() => {
+            // If Cloudinary fails, try original URL before showing placeholder
+            if (!useFallback) {
+              setUseFallback(true);
+              setIsLoading(true);
+            } else {
+              setHasError(true);
+            }
+          }}
+        />
+      </div>
     </div>
   );
 }

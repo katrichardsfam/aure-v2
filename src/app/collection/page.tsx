@@ -9,6 +9,7 @@ import { useUser } from "@clerk/nextjs";
 import { api } from "../../../convex/_generated/api";
 import { Loader2, X, Droplets, Plus } from "lucide-react";
 import { useState } from "react";
+import { getOptimizedPerfumeImage } from "@/lib/imageUtils";
 import { Id } from "../../../convex/_generated/dataModel";
 
 // Scent family to gradient and accent color mapping
@@ -28,20 +29,22 @@ const scentFamilyStyles: Record<string, { gradient: string; accent: string; plac
 
 const defaultStyle = { gradient: "from-stone-50 to-amber-50", accent: "text-stone-600", placeholderBg: "from-stone-100 to-amber-100", emoji: "✨" };
 
-// Image component with loading state and nice placeholder
+// Image component with loading state, fallback, and nice placeholder
 function FragranceImage({
   src,
   alt,
-  name,
   styles
 }: {
   src?: string;
   alt: string;
-  name?: string;
   styles: typeof defaultStyle;
 }) {
   const [isLoading, setIsLoading] = useState(true);
+  const [useFallback, setUseFallback] = useState(false);
   const [hasError, setHasError] = useState(false);
+
+  // Get the appropriate image URL (optimized or original fallback)
+  const imageUrl = useFallback ? (src || '') : getOptimizedPerfumeImage(src || '');
 
   if (!src || hasError) {
     // Nice placeholder with bottle icon
@@ -53,18 +56,26 @@ function FragranceImage({
   }
 
   return (
-    <div className="h-20 rounded-md overflow-hidden relative bg-white">
+    <div className="h-20 rounded-md overflow-hidden relative bg-gradient-to-br from-white/80 to-white/40">
       {isLoading && (
         <div className={`absolute inset-0 bg-gradient-to-br ${styles.placeholderBg} animate-pulse`} />
       )}
       <Image
-        src={src}
+        src={imageUrl}
         alt={alt}
         fill
         sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 15vw"
-        className={`object-contain p-1.5 transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        className={`object-contain p-1.5 transition-opacity duration-300 mix-blend-multiply ${isLoading ? 'opacity-0' : 'opacity-100'}`}
         onLoad={() => setIsLoading(false)}
-        onError={() => setHasError(true)}
+        onError={() => {
+          // If Cloudinary fails, try original URL before showing placeholder
+          if (!useFallback) {
+            setUseFallback(true);
+            setIsLoading(true);
+          } else {
+            setHasError(true);
+          }
+        }}
       />
     </div>
   );
@@ -279,7 +290,6 @@ export default function CollectionPage() {
                         <FragranceImage
                           src={item.perfume?.imageUrl}
                           alt={item.perfume?.name || "Fragrance"}
-                          name={item.perfume?.name}
                           styles={styles}
                         />
 
